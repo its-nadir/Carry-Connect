@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Carry Connect</title>
+  </head>
+  <body>
+    <h1 id="message">Loading...</h1>
+
+    <script type="module">
+      // Import the Firebase SDKs as ES modules
+      import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+      import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+
+      // ✅ Your Firebase configuration
+      const firebaseConfig = {
+        apiKey: "AIzaSyBlYdXduw0F2PeqSIitcX038Ct8nCWI4rs",
+        authDomain: "carry-connect-g-1d438.firebaseapp.com",
+        projectId: "carry-connect-g-1d438",
+        storageBucket: "carry-connect-g-1d438.appspot.com",
+        messagingSenderId: "678996484347",
+        appId: "1:678996484347:web:28f6039cc9b61030a6905e"
+      };
+
+      // ✅ Initialize Firebase
+      const app = initializeApp(firebaseConfig);
+      const db = getFirestore(app);
+
+      // ✅ Fetch the "team G" message from Firestore
+      async function loadMessage() {
+        try {
+          const ref = doc(db, "app", "message");
+          const snap = await getDoc(ref);
+
+          if (snap.exists()) {
+            document.getElementById("message").innerText = snap.data().text;
+          } else {
+            document.getElementById("message").innerText = "No message found";
+          }
+        } catch (error) {
+          document.getElementById("message").innerText =
+            "Error loading message: " + error.message;
+        }
+      }
+
+      loadMessage();
+    </script>
+  </body>
+</html>
