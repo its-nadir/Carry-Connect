@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Carry Connect</title>
+  </head>
+  <body>
+    <h1 id="message">Loading...</h1>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js"></script>
+
+    <script>
+      // 🔹 Your Firebase config
+      const firebaseConfig = {
+        apiKey: "AIzaSyB1yXdXduw0F2PeqSTitcx983ct8nCW1r4s",
+        authDomain: "carry-connect-g-1d438.firebaseapp.com",
+        projectId: "carry-connect-g-1d438",
+        storageBucket: "carry-connect-g-1d438.appspot.com",
+        messagingSenderId: "678996484347",
+        appId: "1:678996484347:web:28f6039cc9b61030a6905e",
+        measurementId: "G-JF1ZS9XFLT"
+      };
+
+      // 🔹 Initialize Firebase
+      const app = firebase.initializeApp(firebaseConfig);
+      const db = firebase.firestore();
+
+      // 🔹 Fetch data from Firestore
+      db.collection("app").doc("message").get().then((doc) => {
+        if (doc.exists) {
+          document.getElementById("message").innerText = doc.data().text;
+        } else {
+          document.getElementById("message").innerText = "No message found";
+        }
+      }).catch((error) => {
+        document.getElementById("message").innerText = "Error: " + error.message;
+      });
+    </script>
+  </body>
+</html>
