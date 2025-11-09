@@ -1,0 +1,11 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Allow anyone to read (fetch) data, but only you can write from the console
+    match /{document=**} {
+      allow read: if true;
+      allow write: if false;
+    }
+  }
+}
