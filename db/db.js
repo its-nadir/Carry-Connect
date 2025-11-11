@@ -1,12 +1,12 @@
-// db.js — Firebase Database & Auth Module
+// db.js — Carry Connect: Peer-to-Peer Document Delivery with Payments & Tracking
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-import { 
-  getFirestore, collection, addDoc, doc, updateDoc, getDoc, getDocs, 
-  onSnapshot, orderBy, query, where 
+import {
+  getFirestore, collection, addDoc, doc, updateDoc, getDoc, getDocs,
+  onSnapshot, orderBy, query, where, serverTimestamp, writeBatch
 } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
-import { 
-  getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, 
-  onAuthStateChanged, sendPasswordResetEmail, sendEmailVerification 
+import {
+  getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword,
+  onAuthStateChanged, sendPasswordResetEmail, sendEmailVerification
 } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
 
 // === CONFIG ===
@@ -23,114 +23,210 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const auth = getAuth(app);
 
+let currentShipmentId = null;
+
 // === EXPORTS ===
 export {
   db, auth,
-  createUserWithEmailAndPassword,
-  signInWithEmailAndPassword,
-  sendPasswordResetEmail,
-  sendEmailVerification,
-  onAuthStateChanged,
+  createUserWithEmailAndPassword, signInWithEmailAndPassword,
+  sendPasswordResetEmail, sendEmailVerification, onAuthStateChanged,
   collection, addDoc, doc, updateDoc, getDoc, getDocs,
-  onSnapshot, orderBy, query, where
+  onSnapshot, orderBy, query, where, serverTimestamp
 };
 
-// === DATABASE FUNCTIONS ===
-let currentShipmentId = null;
-
-// Set current chat ID
+// === UTILS ===
 export const setCurrentShipmentId = (id) => currentShipmentId = id;
 
-// Save Profile
-export const saveProfile = async (name, phone) => {
+// === USER PROFILE ===
+export const saveProfile = async (name, phone, role = "both") => {
   if (!auth.currentUser) throw new Error("Not logged in");
   await updateDoc(doc(db, "users", auth.currentUser.uid), {
-    name, phone, email: auth.currentUser.email, updatedAt: new Date()
+    name, phone, email: auth.currentUser.email,
+    role, // 'shipper', 'carrier', or 'both'
+    updatedAt: new Date(),
+    rating: 0,
+    ratingCount: 0,
+    totalEarned: 0,
+    totalSpent: 0
   });
 };
 
-// Post Shipment
-export const saveShipment = async (from, to, weight) => {
+// === POST SHIPMENT (Shipper) ===
+export const postShipment = async ({
+  from, to, pickupDate, deliveryDate,
+  weight, description, reward, photos = []
+}) => {
   if (!auth.currentUser) throw new Error("Not logged in");
-  return await addDoc(collection(db, "shipments"), {
-    from, to, weight: Number(weight),
+  const shipmentRef = await addDoc(collection(db, "shipments"), {
+    from, to, pickupDate, deliveryDate,
+    weight: Number(weight), description, reward: Number(reward),
+    photos,
     owner: auth.currentUser.email,
-    status: "Open",
-    createdAt: new Date()
+    ownerUid: auth.currentUser.uid,
+    status: "open", // open, matched, paid, in-transit, delivered, completed
+    createdAt: new Date(),
+    updatedAt: new Date()
   });
+  return shipmentRef.id;
 };
 
-// Accept Shipment
-export const acceptShipment = async (id) => {
+// === CARRIER: APPLY TO SHIPMENT ===
+export const applyToShipment = async (shipmentId) => {
   if (!auth.currentUser) throw new Error("Not logged in");
   const userSnap = await getDoc(doc(db, "users", auth.currentUser.uid));
   const name = userSnap.exists() ? userSnap.data().name : auth.currentUser.email;
-  const rating = userSnap.exists() ? (userSnap.data().rating || 0) : 0;
 
-  await updateDoc(doc(db, "shipments", id), {
+  await updateDoc(doc(db, "shipments", shipmentId), {
     carrier: auth.currentUser.email,
+    carrierUid: auth.currentUser.uid,
     carrierName: name,
-    carrierRating: rating,
-    status: "Accepted",
-    acceptedAt: new Date()
+    status: "applied",
+    appliedAt: new Date()
   });
 };
 
-// Rate Carrier
-export const rateCarrier = async (shipmentId, stars) => {
+// === SHIPPER: ACCEPT CARRIER (Match) ===
+export const acceptCarrier = async (shipmentId) => {
   if (!auth.currentUser) throw new Error("Not logged in");
-  await updateDoc(doc(db, "shipments", shipmentId), { rating: stars, ratedAt: new Date() });
-
-  const shipmentSnap = await getDoc(doc(db, "shipments", shipmentId));
-  const carrierEmail = shipmentSnap.data().carrier;
-  const q = query(collection(db, "shipments"), where("carrier", "==", carrierEmail), where("rating", ">", 0));
-  const ratingsSnap = await getDocs(q);
-  let total = 0, count = 0;
-  ratingsSnap.forEach(r => { total += r.data().rating; count++; });
-  const avg = count > 0 ? (total / count).toFixed(1) : 0;
-
-  const userQ = query(collection(db, "users"), where("email", "==", carrierEmail));
-  const userSnap = await getDocs(userQ);
-  if (!userSnap.empty) {
-    await updateDoc(doc(db, "users", userSnap.docs[0].id), {
-      rating: Number(avg),
-      ratingCount: count
-    });
-  }
+  await updateDoc(doc(db, "shipments", shipmentId), {
+    status: "matched",
+    matchedAt: new Date()
+  });
 };
 
-// Listen to User's Shipments (real-time)
-export const listenToMyShipments = (callback) => {
-  if (!auth.currentUser) return;
-  const userEmail = auth.currentUser.email;
-  const q = query(collection(db, "shipments"), orderBy("createdAt", "desc"));
-  return onSnapshot(q, async (snap) => {
-    const shipments = [];
-    for (const doc of snap.docs) {
-      const d = doc.data();
-      if (d.owner === userEmail || d.carrier === userEmail) {
-        shipments.push({ id: doc.id, ...d });
-      }
-    }
+// === PAYMENT: CREATE PAYMENT INTENT (via Stripe) ===
+export const createPaymentIntent = async (shipmentId) => {
+  const shipmentSnap = await getDoc(doc(db, "shipments", shipmentId));
+  if (!shipmentSnap.exists()) throw new Error("Shipment not found");
+  const { reward, ownerUid } = shipmentSnap.data();
+
+  // Call your backend (Node.js) to create Stripe Payment Intent
+  const response = await fetch('/.netlify/functions/create-payment', {
+    method: 'POST',
+    body: JSON.stringify({ amount: reward * 100, shipmentId, ownerUid })
+  });
+  const { clientSecret } = await response.json();
+  return clientSecret;
+};
+
+// === PAYMENT: CONFIRM & HOLD IN ESCROW ===
+export const confirmPayment = async (shipmentId, paymentIntentId) => {
+  await updateDoc(doc(db, "shipments", shipmentId), {
+    paymentIntentId,
+    status: "paid",
+    paidAt: new Date()
+  });
+};
+
+// === TRACKING: UPDATE LOCATION (Carrier) ===
+export const updateLocation = async (shipmentId, lat, lng) => {
+  if (!auth.currentUser) throw new Error("Not logged in");
+  await updateDoc(doc(db, "shipments", shipmentId), {
+    location: { lat, lng },
+    updatedAt: new Date()
+  });
+};
+
+// === CARRIER: MARK AS DELIVERED ===
+export const markDelivered = async (shipmentId) => {
+  await updateDoc(doc(db, "shipments", shipmentId), {
+    status: "delivered",
+    deliveredAt: new Date()
+  });
+};
+
+// === SHIPPER: CONFIRM DELIVERY & RELEASE PAYMENT ===
+export const confirmDelivery = async (shipmentId, rating) => {
+  const batch = writeBatch(db);
+  const shipmentRef = doc(db, "shipments", shipmentId);
+  const shipmentSnap = await getDoc(shipmentRef);
+  const { carrierUid, reward } = shipmentSnap.data();
+
+  // Update shipment
+  batch.update(shipmentRef, {
+    status: "completed",
+    rating,
+    completedAt: new Date()
+  });
+
+  // Update carrier earnings & rating
+  const carrierRef = doc(db, "users", carrierUid);
+  const carrierSnap = await getDoc(carrierRef);
+  const data = carrierSnap.data();
+  const newCount = (data.ratingCount || 0) + 1;
+  const newRating = ((data.rating || 0) * data.ratingCount + rating) / newCount;
+
+  batch.update(carrierRef, {
+    totalEarned: (data.totalEarned || 0) + reward,
+    rating: newRating,
+    ratingCount: newCount
+  });
+
+  await batch.commit();
+
+  // Trigger payout via Stripe (call backend)
+  await fetch('/.netlify/functions/release-payment', {
+    method: 'POST',
+    body: JSON.stringify({ shipmentId })
+  });
+};
+
+// === REAL-TIME LISTENERS ===
+export const listenToOpenShipments = (callback) => {
+  const q = query(
+    collection(db, "shipments"),
+    where("status", "in", ["open", "applied"]),
+    orderBy("createdAt", "desc")
+  );
+  return onSnapshot(q, (snap) => {
+    const shipments = snap.docs.map(d => ({ id: d.id, ...d.data() }));
     callback(shipments);
   });
 };
 
-// Listen to Chat (real-time)
+export const listenToMyShipments = (callback) => {
+  if (!auth.currentUser) return;
+  const q = query(
+    collection(db, "shipments"),
+    where("ownerUid", "==", auth.currentUser.uid),
+    orderBy("createdAt", "desc")
+  );
+  return onSnapshot(q, (snap) => {
+    const shipments = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    callback(shipments);
+  });
+};
+
+export const listenToMyCarries = (callback) => {
+  if (!auth.currentUser) return;
+  const q = query(
+    collection(db, "shipments"),
+    where("carrierUid", "==", auth.currentUser.uid),
+    orderBy("createdAt", "desc")
+  );
+  return onSnapshot(q, (snap) => {
+    const shipments = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    callback(shipments);
+  });
+};
+
 export const listenToChat = (callback) => {
   if (!currentShipmentId) return;
-  const msgRef = collection(db, "shipments", currentShipmentId, "messages");
-  const q = query(msgRef, orderBy("sentAt"));
+  const q = query(
+    collection(db, "shipments", currentShipmentId, "messages"),
+    orderBy("sentAt")
+  );
   return onSnapshot(q, (snap) => {
-    const messages = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    const messages = snap.docs.map(d => ({ id: d.id, ...d.data() }));
     callback(messages);
   });
 };
 
-// Send Message
 export const sendMessage = async (text) => {
   if (!text || !currentShipmentId || !auth.currentUser) return;
   await addDoc(collection(db, "shipments", currentShipmentId, "messages"), {
-    text, sender: auth.currentUser.email, sentAt: new Date()
+    text,
+    sender: auth.currentUser.email,
+    sentAt: new Date()
   });
 };
