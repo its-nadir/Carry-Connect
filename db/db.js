@@ -1,4 +1,4 @@
-// db.js — Carry Connect: Peer-to-Peer Document Delivery with Payments & Tracking
+// db.js — Carry Connect: Peer-to-Peer Document Delivery with Handover Points
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
 import {
   getFirestore, collection, addDoc, doc, updateDoc, getDoc, getDocs,
@@ -51,19 +51,27 @@ export const saveProfile = async (name, phone, role = "both") => {
   });
 };
 
-// === POST SHIPMENT (Shipper) ===
+// === POST SHIPMENT (Shipper) — WITH PICKUP & DROPOFF ===
 export const postShipment = async ({
-  from, to, pickupDate, deliveryDate,
+  from, to,
+  pickupLocation, pickupTime,
+  dropoffLocation, dropoffTime,
   weight, description, reward, photos = []
 }) => {
   if (!auth.currentUser) throw new Error("Not logged in");
+  if (!pickupLocation || !pickupTime || !dropoffLocation || !dropoffTime) {
+    throw new Error("Pickup & dropoff required");
+  }
+
   const shipmentRef = await addDoc(collection(db, "shipments"), {
-    from, to, pickupDate, deliveryDate,
+    from, to,
+    pickupLocation, pickupTime: new Date(pickupTime),
+    dropoffLocation, dropoffTime: new Date(dropoffTime),
     weight: Number(weight), description, reward: Number(reward),
     photos,
     owner: auth.currentUser.email,
     ownerUid: auth.currentUser.uid,
-    status: "open", // open, matched, paid, in-transit, delivered, completed
+    status: "open",
     createdAt: new Date(),
     updatedAt: new Date()
   });
@@ -94,13 +102,12 @@ export const acceptCarrier = async (shipmentId) => {
   });
 };
 
-// === PAYMENT: CREATE PAYMENT INTENT (via Stripe) ===
+// === PAYMENT: CREATE PAYMENT INTENT ===
 export const createPaymentIntent = async (shipmentId) => {
   const shipmentSnap = await getDoc(doc(db, "shipments", shipmentId));
   if (!shipmentSnap.exists()) throw new Error("Shipment not found");
   const { reward, ownerUid } = shipmentSnap.data();
 
-  // Call your backend (Node.js) to create Stripe Payment Intent
   const response = await fetch('/.netlify/functions/create-payment', {
     method: 'POST',
     body: JSON.stringify({ amount: reward * 100, shipmentId, ownerUid })
@@ -142,14 +149,12 @@ export const confirmDelivery = async (shipmentId, rating) => {
   const shipmentSnap = await getDoc(shipmentRef);
   const { carrierUid, reward } = shipmentSnap.data();
 
-  // Update shipment
   batch.update(shipmentRef, {
     status: "completed",
     rating,
     completedAt: new Date()
   });
 
-  // Update carrier earnings & rating
   const carrierRef = doc(db, "users", carrierUid);
   const carrierSnap = await getDoc(carrierRef);
   const data = carrierSnap.data();
@@ -164,14 +169,13 @@ export const confirmDelivery = async (shipmentId, rating) => {
 
   await batch.commit();
 
-  // Trigger payout via Stripe (call backend)
   await fetch('/.netlify/functions/release-payment', {
     method: 'POST',
     body: JSON.stringify({ shipmentId })
   });
 };
 
-// === REAL-TIME LISTENERS ===
+// === REAL-TIME LISTENERS (WITH PICKUP/DROPOFF) ===
 export const listenToOpenShipments = (callback) => {
   const q = query(
     collection(db, "shipments"),
@@ -179,7 +183,15 @@ export const listenToOpenShipments = (callback) => {
     orderBy("createdAt", "desc")
   );
   return onSnapshot(q, (snap) => {
-    const shipments = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    const shipments = snap.docs.map(d => {
+      const data = d.data();
+      return {
+        id: d.id,
+        ...data,
+        pickupTime: data.pickupTime?.toDate(),
+        dropoffTime: data.dropoffTime?.toDate()
+      };
+    });
     callback(shipments);
   });
 };
@@ -192,7 +204,15 @@ export const listenToMyShipments = (callback) => {
     orderBy("createdAt", "desc")
   );
   return onSnapshot(q, (snap) => {
-    const shipments = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    const shipments = snap.docs.map(d => {
+      const data = d.data();
+      return {
+        id: d.id,
+        ...data,
+        pickupTime: data.pickupTime?.toDate(),
+        dropoffTime: data.dropoffTime?.toDate()
+      };
+    });
     callback(shipments);
   });
 };
@@ -205,7 +225,15 @@ export const listenToMyCarries = (callback) => {
     orderBy("createdAt", "desc")
   );
   return onSnapshot(q, (snap) => {
-    const shipments = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    const shipments = snap.docs.map(d => {
+      const data = d.data();
+      return {
+        id: d.id,
+        ...data,
+        pickupTime: data.pickupTime?.toDate(),
+        dropoffTime: data.dropoffTime?.toDate()
+      };
+    });
     callback(shipments);
   });
 };
