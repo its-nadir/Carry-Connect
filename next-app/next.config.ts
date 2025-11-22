@@ -1,10 +1,7 @@
-/** @type {import('next').NextConfig} */
-const nextConfig = {
+import type { NextConfig } from 'next';
+
+const nextConfig: NextConfig = {
   output: 'export',
-  devIndicators: false,
-  experimental: {
-    turbo: false,
-  },
   images: {
     unoptimized: true,
     remotePatterns: [
@@ -14,15 +11,6 @@ const nextConfig = {
       },
     ],
   },
-  webpack: (config) => {
-    config.resolve.fallback = {
-      ...config.resolve.fallback,
-      fs: false,
-      net: false,
-      tls: false,
-    };
-    return config;
-  },
 };
 
-module.exports = nextConfig;
+export default nextConfig;
