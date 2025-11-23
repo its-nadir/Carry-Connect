@@ -73,6 +73,9 @@ service cloud.firestore {
     }
   }
 }
+
+
+
 //rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
@@ -153,6 +156,9 @@ service cloud.firestore {
     // match /bookings/{bookingId} { ... }  ← DELETED
   }
 }//
+
+
+
 
 // i think the following code is better than the previous it only have afew changes//
 
