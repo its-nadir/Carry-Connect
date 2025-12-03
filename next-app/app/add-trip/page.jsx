@@ -38,7 +38,45 @@ export default function AddTripPage() {
     checkAuth();
   }, [router]);
 
+  const [successMsg, setSuccessMsg] = useState("");
+  const [errorMsg, setErrorMsg] = useState("");
+
   const handleChange = (e) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value
+    });
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    console.log("Submitting trip form...", formData);
+    setLoading(true);
+    setErrorMsg("");
+    setSuccessMsg("");
+
+    try {
+      console.log("Importing postTrip...");
+      const { postTrip } = await import("../../lib/db");
+
+      console.log("Calling postTrip...");
+      await postTrip({
+        ...formData,
+        price: parseFloat(formData.price),
+      });
+
+      console.log("Trip posted successfully!");
+      setSuccessMsg("Trip posted successfully! Redirecting...");
+      setTimeout(() => router.push("/my-trips"), 1500);
+    } catch (error) {
+      console.error("Error creating trip:", error);
+      setErrorMsg("Failed to create trip: " + error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (!user) {
     return (
       <div className={styles.container}>
         <div className={styles.loading}>Checking authentication...</div>
