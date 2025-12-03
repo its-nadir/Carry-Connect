@@ -94,26 +94,39 @@ export const postTrip = async ({ from, to, date, transportType, packageSize, pri
 
 // Get all available carriers/trips (Find Carrier page)
 export const listenToAvailableTrips = (callback) => {
+  console.log("listenToAvailableTrips: Setting up listener...");
   const q = query(collection(db, "trips"), where("status", "==", "available"), orderBy("createdAt", "desc"));
   return onSnapshot(q, (snap) => {
-    const trips = snap.docs.map(d => ({ id: d.id, ...d.data(), date: d.data().date?.toDate() }));
+    console.log("listenToAvailableTrips: Snapshot received, docs:", snap.docs.length);
+    const trips = snap.docs.map(d => ({ id: d.id, ...d.data(), date: d.data().date?.toDate ? d.data().date.toDate() : new Date(d.data().date) }));
     callback(trips);
+  }, (error) => {
+    console.error("listenToAvailableTrips: Error in snapshot:", error);
   });
 };
 
 // Get my trips (Carrier)
 export const listenToMyTrips = (callback) => {
-  if (!auth.currentUser) return () => { };
+  if (!auth.currentUser) {
+    console.log("listenToMyTrips: No user logged in");
+    return () => { };
+  }
+  console.log("listenToMyTrips: Setting up listener for user:", auth.currentUser.uid);
   const q = query(collection(db, "trips"), where("carrierUid", "==", auth.currentUser.uid), orderBy("createdAt", "desc"));
   return onSnapshot(q, (snap) => {
-    const trips = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    console.log("listenToMyTrips: Snapshot received, docs:", snap.docs.length);
+    const trips = snap.docs.map(d => {
+      const data = d.data();
+      return {
+        id: d.id,
+        ...data,
+        date: data.date?.toDate ? data.date.toDate() : new Date(data.date)
+      };
+    });
     callback(trips);
+  }, (error) => {
+    console.error("listenToMyTrips: Error in snapshot:", error);
   });
-};
-
-// Delete trip
-export const deleteTrip = async (tripId) => {
-  await deleteDoc(doc(db, "trips", tripId));
 };
 
 // Legacy/Helper functions from firestore.js (adapted to match db.js style where possible)

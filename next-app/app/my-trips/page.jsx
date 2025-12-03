@@ -123,7 +123,7 @@ export default function MyTripsPage() {
               <div className={styles.details}>
                 <div className={styles.detail}>
                   <i className="fa-solid fa-calendar"></i>
-                  <span>{trip.date}</span>
+                  <span>{trip.date ? new Date(trip.date).toLocaleDateString() : 'N/A'}</span>
                 </div>
                 <div className={styles.detail}>
                   <i className="fa-solid fa-box"></i>
