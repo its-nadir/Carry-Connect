@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import Link from "next/link";
 import SearchBox from "../components/SearchBox";
 import styles from "./find.module.css";
@@ -50,7 +50,9 @@ export default function FindCarrierPage() {
 
   return (
     <main className={styles.pageWrapper}>
-      <SearchBox className={styles.searchBoxFind} />
+      <Suspense fallback={<div>Loading search...</div>}>
+        <SearchBox className={styles.searchBoxFind} />
+      </Suspense>
 
       <div className={styles.topActions}>
         <button className={styles.filterBtn}>

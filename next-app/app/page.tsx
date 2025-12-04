@@ -1,5 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
+import { Suspense } from "react";
 import SearchBox from "./components/SearchBox";
 
 export default function Home() {
@@ -48,7 +49,10 @@ export default function Home() {
         </div>
 
         {/* SEARCH BOX */}
-        <SearchBox />
+        {/* SEARCH BOX */}
+        <Suspense fallback={<div>Loading search...</div>}>
+          <SearchBox />
+        </Suspense>
       </section>
 
       {/* HOW IT WORKS */}
