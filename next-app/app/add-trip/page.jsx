@@ -24,19 +24,23 @@ export default function AddTripPage() {
       try {
         const { getCurrentUser } = await import("../../lib/auth");
         const currentUser = await getCurrentUser();
-        if (!currentUser) {
-          // Redirect to auth with return URL
-          router.push("/auth?redirect=/add-trip");
-        } else {
+        if (currentUser) {
           setUser(currentUser);
+        }
+
+        // Check for pending trip data
+        const pendingData = sessionStorage.getItem("pendingTripPost");
+        if (pendingData) {
+          setFormData(JSON.parse(pendingData));
+          // Optional: Clear it after loading, or keep it until successful submission?
+          // Keeping it is safer in case they navigate away again.
         }
       } catch (error) {
         console.error("Auth error:", error);
-        router.push("/auth?redirect=/add-trip");
       }
     }
     checkAuth();
-  }, [router]);
+  }, []);
 
   const [successMsg, setSuccessMsg] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
@@ -50,6 +54,14 @@ export default function AddTripPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    if (!user) {
+      // Save data and redirect to login
+      sessionStorage.setItem("pendingTripPost", JSON.stringify(formData));
+      router.push("/auth?redirect=/add-trip");
+      return;
+    }
+
     console.log("Submitting trip form...", formData);
     setLoading(true);
     setErrorMsg("");
@@ -67,6 +79,7 @@ export default function AddTripPage() {
 
       console.log("Trip posted successfully!");
       setSuccessMsg("Trip posted successfully! Redirecting...");
+      sessionStorage.removeItem("pendingTripPost"); // Clear pending data
       setTimeout(() => router.push("/my-trips"), 1500);
     } catch (error) {
       console.error("Error creating trip:", error);
@@ -75,14 +88,6 @@ export default function AddTripPage() {
       setLoading(false);
     }
   };
-
-  if (!user) {
-    return (
-      <div className={styles.container}>
-        <div className={styles.loading}>Checking authentication...</div>
-      </div>
-    );
-  }
 
   return (
     <div className={styles.container}>
@@ -213,7 +218,7 @@ export default function AddTripPage() {
             className={styles.submitBtn}
             disabled={loading}
           >
-            {loading ? "Posting..." : "Post Trip"}
+            {loading ? "Posting..." : (user ? "Post Trip" : "Login to Post Trip")}
           </button>
         </form>
       </div>

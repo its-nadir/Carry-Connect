@@ -34,11 +34,12 @@ function BookingContent() {
                 const { getCurrentUser } = await import("../../lib/auth");
                 const currentUser = await getCurrentUser();
 
-                if (!currentUser) {
-                    router.push(`/auth?redirect=/booking?tripId=${tripId}`);
-                    return;
+                if (currentUser) {
+                    setUser(currentUser);
                 }
-                setUser(currentUser);
+
+                // Check for pending booking data
+                const pendingData = sessionStorage.getItem(`pendingBooking_${tripId}`);
 
                 const { getTrip } = await import("../../lib/db");
                 const tripData = await getTrip(tripId);
@@ -47,7 +48,12 @@ function BookingContent() {
                     setErrorMsg("Trip not found");
                 } else {
                     setTrip(tripData);
-                    setFormData(prev => ({ ...prev, reward: tripData.price }));
+                    if (pendingData) {
+                        setFormData(JSON.parse(pendingData));
+                    } else {
+                        // Only set default reward if no pending data
+                        setFormData(prev => ({ ...prev, reward: tripData.price }));
+                    }
                 }
             } catch (error) {
                 console.error("Error loading booking page:", error);
@@ -57,7 +63,7 @@ function BookingContent() {
             }
         }
         init();
-    }, [tripId, router]);
+    }, [tripId]);
 
     const handleChange = (e) => {
         setFormData({
@@ -68,6 +74,14 @@ function BookingContent() {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+
+        if (!user) {
+            // Save data and redirect to login
+            sessionStorage.setItem(`pendingBooking_${tripId}`, JSON.stringify(formData));
+            router.push(`/auth?redirect=/booking?tripId=${tripId}`);
+            return;
+        }
+
         setSubmitting(true);
         setErrorMsg("");
         setSuccessMsg("");
@@ -77,6 +91,7 @@ function BookingContent() {
             await bookTrip(tripId, formData);
 
             setSuccessMsg("Booking request sent successfully!");
+            sessionStorage.removeItem(`pendingBooking_${tripId}`); // Clear pending data
             setTimeout(() => {
                 router.push("/my-trips");
             }, 2000);
@@ -211,7 +226,7 @@ function BookingContent() {
                             className={styles.submitBtn}
                             disabled={submitting}
                         >
-                            {submitting ? "Processing..." : "Confirm Booking"}
+                            {submitting ? "Processing..." : (user ? "Confirm Booking" : "Login to Book")}
                         </button>
                     </form>
                 </div>

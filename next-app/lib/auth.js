@@ -44,10 +44,9 @@ export const signIn = async (email, password) => {
   }
 };
 
-// Sign in with Google
-export const signInWithGoogle = async () => {
+// Helper to create/update user in Firestore after social login
+const handleSocialLogin = async (provider) => {
   try {
-    const provider = new GoogleAuthProvider();
     const result = await signInWithPopup(auth, provider);
     const user = result.user;
 
@@ -62,11 +61,15 @@ export const signInWithGoogle = async () => {
         role: "user"
       });
     }
-
     return user;
   } catch (error) {
     throw error;
   }
+};
+
+// Sign in with Google
+export const signInWithGoogle = async () => {
+  return handleSocialLogin(new GoogleAuthProvider());
 };
 
 // Sign out user
@@ -81,6 +84,16 @@ export const logOut = async () => {
 // Listen for auth state changes
 export const onAuthChange = (callback) => {
   return onAuthStateChanged(auth, callback);
+};
+
+// Get current user (Promise-based)
+export const getCurrentUser = () => {
+  return new Promise((resolve, reject) => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      unsubscribe();
+      resolve(user);
+    }, reject);
+  });
 };
 
 // Setup Recaptcha for phone verification

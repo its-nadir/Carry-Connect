@@ -67,6 +67,30 @@ export async function setUserProfile(userId, profileData) {
   }
 }
 
+export const updateUserProfile = setUserProfile; // Alias for compatibility
+
+export const getUserTrips = async (userId) => {
+  try {
+    const q = query(collection(db, "trips"), where("carrierUid", "==", userId), orderBy("createdAt", "desc"));
+    const snap = await getDocs(q);
+    return snap.docs.map(d => ({ id: d.id, ...d.data(), date: d.data().date?.toDate ? d.data().date.toDate() : new Date(d.data().date) }));
+  } catch (error) {
+    console.error("Error getting user trips:", error);
+    return [];
+  }
+};
+
+export const getUserOrders = async (userId) => {
+  try {
+    const q = query(collection(db, "trips"), where("bookedByUid", "==", userId), orderBy("bookedAt", "desc"));
+    const snap = await getDocs(q);
+    return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  } catch (error) {
+    console.error("Error getting user orders:", error);
+    return [];
+  }
+};
+
 // Trip Management (Carriers)
 
 // Post a trip (Carrier)
@@ -96,7 +120,7 @@ export const postTrip = async ({ from, to, date, transportType, packageSize, pri
 // Delete a trip
 export const deleteTrip = async (tripId) => {
   if (!auth.currentUser) throw new Error("Login required");
-  
+
   try {
     await deleteDoc(doc(db, "trips", tripId));
     return true;
