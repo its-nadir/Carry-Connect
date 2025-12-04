@@ -1,261 +1,130 @@
-# CarryConnect - Package Delivery Platform
+# CarryConnect
 
-A Next.js web application that connects travelers with people who need to send packages, built with Firebase backend.
+CarryConnect is a web application designed to connect travelers with individuals who need to send packages. By leveraging available luggage space, the platform facilitates efficient and community-driven delivery solutions.
 
-## 🚀 Features
+## Features
 
-- **User Authentication** - Sign up/login with email or Google
-- **Find Carriers** - Search for travelers going to your destination
-- **Messaging System** - Chat with carriers to arrange delivery
-- **User Profiles** - View ratings, reviews, and trip history
-- **Trip Management** - Create and manage your trips
-- **Real-time Database** - Powered by Firebase Firestore
+*   **User Authentication**: Secure sign-up and login functionality using Email/Password and Google Authentication.
+*   **Carrier Discovery**: Advanced search functionality to find travelers heading to specific destinations.
+*   **Messaging System**: Integrated real-time chat to facilitate communication between senders and carriers.
+*   **User Profiles**: Comprehensive profiles featuring ratings, reviews, and trip history to build trust.
+*   **Trip Management**: Tools for travelers to schedule and manage their upcoming trips.
+*   **Real-time Updates**: Powered by Firebase Firestore for instant data synchronization.
 
-## 🛠️ Tech Stack
+## Technology Stack
 
-- **Frontend**: Next.js 16, React 19, TailwindCSS
-- **Backend**: Firebase (Firestore, Authentication, Hosting)
-- **Deployment**: GitHub Actions + Firebase Hosting
+*   **Frontend**: Next.js 16, React 19, TailwindCSS
+*   **Backend**: Firebase (Firestore, Authentication, Hosting)
+*   **CI/CD**: GitHub Actions
 
-## 📋 Prerequisites
+## Getting Started
 
-- Node.js 20+ and npm
-- Firebase CLI (`npm install -g firebase-tools`)
-- Firebase account
+### Prerequisites
 
-## 🔧 Setup Instructions
+*   Node.js 20 or higher
+*   npm (Node Package Manager)
+*   Firebase CLI (`npm install -g firebase-tools`)
+*   A Firebase project
 
-### 1. Clone the Repository
+### Installation
 
-```bash
-git clone https://github.com/its-nadir/Carry-Connect.git
-cd Carry-Connect
-```
+1.  Clone the repository:
+    ```bash
+    git clone https://github.com/its-nadir/Carry-Connect.git
+    cd Carry-Connect
+    ```
 
-### 2. Install Dependencies
+2.  Install dependencies:
+    ```bash
+    cd next-app
+    npm install
+    ```
 
-```bash
-cd next-app
-npm install
-```
+### Configuration
 
-### 3. Configure Firebase
+1.  **Firebase Setup**:
+    *   Create a project in the [Firebase Console](https://console.firebase.google.com/).
+    *   Register a web app to obtain your configuration keys.
+    *   Enable **Authentication** (Email/Password, Google).
+    *   Create a **Firestore Database** (Production mode, recommended region: `europe-west10`).
 
-#### Get Firebase Configuration
+2.  **Environment Variables**:
+    Create a `.env.local` file in the `next-app` directory and populate it with your Firebase credentials:
 
-1. Go to [Firebase Console](https://console.firebase.google.com/)
-2. Select your project: `carry-connect-g-1d438`
-3. Go to Project Settings > General
-4. Scroll down to "Your apps" section
-5. Click on the web app or create one
-6. Copy the configuration values
+    ```env
+    NEXT_PUBLIC_FIREBASE_API_KEY=your_api_key
+    NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=your_project_id.firebaseapp.com
+    NEXT_PUBLIC_FIREBASE_PROJECT_ID=your_project_id
+    NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=your_project_id.firebasestorage.app
+    NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=your_sender_id
+    NEXT_PUBLIC_FIREBASE_APP_ID=your_app_id
+    ```
 
-#### Set Environment Variables
+3.  **Deploy Security Rules**:
+    ```bash
+    firebase deploy --only firestore:rules
+    ```
 
-Create a `.env.local` file in the `next-app` directory:
+### Running the Application
 
-```bash
-cp .env.local.example .env.local
-```
-
-Edit `.env.local` and add your Firebase configuration:
-
-```env
-NEXT_PUBLIC_FIREBASE_API_KEY=your_api_key_here
-NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=carry-connect-g-1d438.firebaseapp.com
-NEXT_PUBLIC_FIREBASE_PROJECT_ID=carry-connect-g-1d438
-NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=carry-connect-g-1d438.firebasestorage.app
-NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=your_sender_id_here
-NEXT_PUBLIC_FIREBASE_APP_ID=your_app_id_here
-```
-
-### 4. Enable Firebase Services
-
-#### Enable Authentication
-
-1. Go to Firebase Console > Authentication
-2. Click "Get Started"
-3. Enable Email/Password provider
-4. Enable Google provider (optional)
-
-#### Enable Firestore Database
-
-1. Go to Firebase Console > Firestore Database
-2. Click "Create database"
-3. Choose "Start in production mode"
-4. Select location: `europe-west10`
-
-#### Deploy Firestore Rules
-
-```bash
-firebase deploy --only firestore:rules
-```
-
-### 5. Run Development Server
+Start the development server:
 
 ```bash
 cd next-app
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) in your browser.
+The application will be available at [http://localhost:3000](http://localhost:3000).
 
-## 🚀 Deployment
+## Deployment
 
 ### Manual Deployment
 
+To deploy the application to Firebase Hosting manually:
+
 ```bash
-# Build the Next.js app
 cd next-app
 npm run build
-
-# Deploy to Firebase
 cd ..
 firebase deploy
 ```
 
-Or use the deployment script:
-
+Alternatively, use the provided script:
 ```bash
 ./deploy.sh
 ```
 
-### Automatic Deployment with GitHub Actions
+### Automated Deployment
 
-The project is configured for automatic deployment on every push to the `main` branch.
+This repository includes a GitHub Actions workflow for continuous deployment. To enable it:
 
-#### Setup GitHub Secrets
+1.  Obtain a Firebase CI token: `firebase login:ci`
+2.  Add the token as `FIREBASE_TOKEN` in your GitHub repository secrets.
+3.  Add all `NEXT_PUBLIC_FIREBASE_*` environment variables to the repository secrets.
+4.  Push changes to the `main` branch to trigger the deployment.
 
-1. Get your Firebase token:
-   ```bash
-   firebase login:ci
-   ```
-
-2. Add the following secrets to your GitHub repository (Settings > Secrets and variables > Actions):
-   - `FIREBASE_TOKEN` - Token from step 1
-   - `NEXT_PUBLIC_FIREBASE_API_KEY`
-   - `NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN`
-   - `NEXT_PUBLIC_FIREBASE_PROJECT_ID`
-   - `NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET`
-   - `NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID`
-   - `NEXT_PUBLIC_FIREBASE_APP_ID`
-
-3. Push to main branch:
-   ```bash
-   git add .
-   git commit -m "Update configuration"
-   git push origin main
-   ```
-
-The GitHub Actions workflow will automatically build and deploy your app.
-
-## 📁 Project Structure
+## Project Structure
 
 ```
 Carry-Connect/
-├── next-app/               # Next.js application
-│   ├── app/               # App router pages
-│   │   ├── components/    # React components
-│   │   ├── find-a-carrier/
-│   │   ├── messages/
-│   │   ├── profile/
-│   │   ├── layout.tsx
-│   │   └── page.tsx
-│   ├── lib/               # Firebase configuration
-│   │   ├── firebase.js    # Firebase initialization
-│   │   ├── firebase.js    # Firebase initialization
-│   │   └── db.js          # Database and Auth helpers
-│   ├── public/            # Static assets
-│   └── package.json
-├── db/                    # Firestore configuration
-│   ├── firestore.rules    # Security rules
-│   └── firestore.indexes.json
-├── .github/
-│   └── workflows/
-│       └── firebase-hosting.yml
-├── firebase.json          # Firebase configuration
-├── .firebaserc           # Firebase project
-└── deploy.sh             # Deployment script
+├── next-app/               # Main Next.js application source
+│   ├── app/                # App Router: pages, layouts, and components
+│   ├── lib/                # Shared libraries and Firebase configuration
+│   └── public/             # Static assets
+├── db/                     # Database configuration and rules
+├── .github/                # GitHub Actions workflows
+└── scripts/                # Utility scripts
 ```
 
-## 🔐 Firebase Security Rules
 
-The Firestore security rules are configured to:
-- Allow anyone to read carrier listings
-- Require authentication for creating/updating data
-- Ensure users can only modify their own data
-- Restrict message access to conversation participants
+## Contributing
 
-## 📚 API Documentation
+We welcome contributions to CarryConnect! Please read our [Contributing Guidelines](CONTRIBUTING.md) for details on our code of conduct and the process for submitting pull requests.
 
-### Authentication (`lib/auth.js`)
+## License
 
-- `signUp(email, password, displayName)` - Create new user
-- `signIn(email, password)` - Sign in user
-- `signInWithGoogle()` - Sign in with Google
-- `logOut()` - Sign out user
-- `getCurrentUser()` - Get current user
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-### Firestore (`lib/firestore.js`)
+## Contact
 
-#### Carriers
-- `getCarriers(filters)` - Get all carriers with optional filters
-- `getCarrier(carrierId)` - Get single carrier
-- `createCarrier(carrierData)` - Create new carrier listing
-- `updateCarrier(carrierId, updates)` - Update carrier
-
-#### Users
-- `getUserProfile(userId)` - Get user profile
-- `setUserProfile(userId, profileData)` - Update user profile
-
-#### Messages
-- `getConversations(userId)` - Get user's conversations
-- `getMessages(conversationId)` - Get messages in conversation
-- `sendMessage(conversationId, senderId, text)` - Send message
-
-#### Trips
-- `getUserTrips(userId)` - Get user's trips
-- `createTrip(tripData)` - Create new trip
-
-## 🌐 Live Website
-
-- **Production**: https://carry-connect-g-1d438.web.app/
-- **Firebase Console**: https://console.firebase.google.com/project/carry-connect-g-1d438
-
-## 👥 Team
-
-- **Email**: groupegteamproject@gmail.com
-- **GitHub**: https://github.com/its-nadir/Carry-Connect
-
-## 📝 License
-
-This project is licensed under the MIT License.
-
-## 🐛 Troubleshooting
-
-### Build Errors
-
-If you encounter build errors:
-```bash
-cd next-app
-rm -rf .next node_modules package-lock.json
-npm install
-npm run build
-```
-
-### Firebase Deployment Issues
-
-If deployment fails:
-```bash
-firebase login
-firebase use carry-connect-g-1d438
-firebase deploy
-```
-
-### Environment Variables Not Working
-
-Make sure `.env.local` is in the `next-app` directory and all variables start with `NEXT_PUBLIC_`.
-
-## 📞 Support
-
-For issues or questions, please open an issue on GitHub.
+For any inquiries or support, please contact the team at groupegteamproject@gmail.com.
