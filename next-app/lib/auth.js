@@ -6,7 +6,10 @@ import {
   onAuthStateChanged,
   updateProfile,
   GoogleAuthProvider,
-  signInWithPopup
+  signInWithPopup,
+  sendEmailVerification as firebaseSendEmailVerification,
+  RecaptchaVerifier,
+  linkWithPhoneNumber
 } from 'firebase/auth';
 import { doc, setDoc, Timestamp } from 'firebase/firestore';
 import { auth, db } from './firebase';
@@ -20,7 +23,7 @@ setPersistence(auth, browserLocalPersistence).catch((error) => {
 /**
  * Sign up with email and password
  */
-export async function signUp(email, password, displayName) {
+export async function signUp(email, password, displayName, phoneNumber) {
   try {
     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
     const user = userCredential.user;
@@ -32,6 +35,7 @@ export async function signUp(email, password, displayName) {
     await setDoc(doc(db, 'users', user.uid), {
       email: user.email,
       displayName: displayName,
+      phone: phoneNumber || "", // Save phone number
       createdAt: Timestamp.now(),
       updatedAt: Timestamp.now(),
       verified: false,
@@ -123,4 +127,44 @@ export function getCurrentUser() {
       resolve(user);
     });
   });
+}
+
+/**
+ * Send email verification
+ */
+export async function sendEmailVerification(user) {
+  try {
+    await firebaseSendEmailVerification(user);
+  } catch (error) {
+    console.error('Error sending email verification:', error);
+    throw error;
+  }
+}
+
+/**
+ * Setup Recaptcha Verifier
+ */
+export function setupRecaptcha(elementId) {
+  if (!window.recaptchaVerifier) {
+    window.recaptchaVerifier = new RecaptchaVerifier(auth, elementId, {
+      'size': 'invisible',
+      'callback': () => {
+        // reCAPTCHA solved, allow signInWithPhoneNumber.
+      }
+    });
+  }
+  return window.recaptchaVerifier;
+}
+
+/**
+ * Link Phone Number
+ */
+export async function linkPhoneNumber(user, phoneNumber, appVerifier) {
+  try {
+    const confirmationResult = await linkWithPhoneNumber(user, phoneNumber, appVerifier);
+    return confirmationResult;
+  } catch (error) {
+    console.error('Error linking phone number:', error);
+    throw error;
+  }
 }

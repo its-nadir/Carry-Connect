@@ -145,6 +145,46 @@ export default function AuthPage() {
           >
             {loading ? "Please wait..." : (isLogin ? "Login" : "Sign Up")}
           </button>
+
+          <div style={{ textAlign: "center", margin: "10px 0" }}>
+            <span style={{ color: "#666", fontSize: "14px" }}>OR</span>
+          </div>
+
+          <button
+            type="button"
+            onClick={async () => {
+              try {
+                const { signInWithGoogle } = await import("../../lib/auth");
+                await signInWithGoogle();
+                const searchParams = new URLSearchParams(window.location.search);
+                const redirectUrl = searchParams.get("redirect") || "/";
+                router.push(redirectUrl);
+              } catch (err) {
+                console.error("Google login error:", err);
+                setError("Failed to sign in with Google.");
+              }
+            }}
+            className={styles.googleBtn}
+            style={{
+              width: "100%",
+              padding: "12px",
+              backgroundColor: "#fff",
+              color: "#333",
+              border: "1px solid #ddd",
+              borderRadius: "8px",
+              fontSize: "16px",
+              fontWeight: "600",
+              cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: "10px",
+              marginBottom: "15px"
+            }}
+          >
+            <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" style={{ width: "20px", height: "20px" }} />
+            Sign in with Google
+          </button>
         </form>
 
         <p className={styles.switchText}>
