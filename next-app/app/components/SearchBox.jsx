@@ -1,14 +1,25 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 
 export default function SearchBox({ className = "" }) {
   const router = useRouter();
+  const searchParams = useSearchParams();
+
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
   const [date, setDate] = useState("");
   const [size, setSize] = useState("");
+
+  useEffect(() => {
+    if (searchParams) {
+      setFrom(searchParams.get("from") || "");
+      setTo(searchParams.get("to") || "");
+      setDate(searchParams.get("date") || "");
+      setSize(searchParams.get("size") || "");
+    }
+  }, [searchParams]);
 
   const handleSearch = () => {
     const params = new URLSearchParams();

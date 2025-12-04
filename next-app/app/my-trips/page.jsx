@@ -15,6 +15,7 @@ export default function MyTripsPage() {
   const [successMsg, setSuccessMsg] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [modalConfig, setModalConfig] = useState({ title: "", message: "", isAlert: false });
   const [tripToDelete, setTripToDelete] = useState(null);
 
   useEffect(() => {
@@ -49,10 +50,20 @@ export default function MyTripsPage() {
 
   const handleDeleteClick = (trip) => {
     if (trip.status === "booked") {
-      alert("This trip has been booked and cannot be deleted. Please contact support or the shipper to resolve this.");
+      setModalConfig({
+        title: "Cannot Delete Trip",
+        message: "This trip has been booked by a user. To ensure reliability, you cannot delete it directly. Please contact support if you have an urgent issue.",
+        isAlert: true
+      });
+      setIsModalOpen(true);
       return;
     }
     setTripToDelete(trip.id);
+    setModalConfig({
+      title: "Delete Trip",
+      message: "Are you sure you want to delete this trip? This action cannot be undone.",
+      isAlert: false
+    });
     setIsModalOpen(true);
   };
 
@@ -175,8 +186,9 @@ export default function MyTripsPage() {
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         onConfirm={handleConfirmDelete}
-        title="Delete Trip"
-        message="Are you sure you want to delete this trip? This action cannot be undone."
+        title={modalConfig.title}
+        message={modalConfig.message}
+        isAlert={modalConfig.isAlert}
       />
     </div>
   );

@@ -1,6 +1,6 @@
 import styles from './ConfirmationModal.module.css';
 
-export default function ConfirmationModal({ isOpen, onClose, onConfirm, title, message }) {
+export default function ConfirmationModal({ isOpen, onClose, onConfirm, title, message, isAlert, confirmText }) {
     if (!isOpen) return null;
 
     return (
@@ -9,11 +9,13 @@ export default function ConfirmationModal({ isOpen, onClose, onConfirm, title, m
                 <h3 className={styles.title}>{title}</h3>
                 <p className={styles.message}>{message}</p>
                 <div className={styles.actions}>
-                    <button className={styles.cancelBtn} onClick={onClose}>
-                        Cancel
-                    </button>
-                    <button className={styles.confirmBtn} onClick={onConfirm}>
-                        Confirm
+                    {!isAlert && (
+                        <button className={styles.cancelBtn} onClick={onClose}>
+                            Cancel
+                        </button>
+                    )}
+                    <button className={styles.confirmBtn} onClick={isAlert ? onClose : onConfirm}>
+                        {confirmText || (isAlert ? "Close" : "Confirm")}
                     </button>
                 </div>
             </div>

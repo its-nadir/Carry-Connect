@@ -52,7 +52,7 @@ export default function Navbar() {
 
       {/* CENTER LINKS */}
       <div className="navbar-center">
-        <Link href="/">Home</Link>
+
         <Link href="/find-a-carrier">Find a Carrier</Link>
         {user && <Link href="/my-trips">My Trips</Link>}
       </div>
@@ -73,7 +73,7 @@ export default function Navbar() {
               Add Trip
             </Link>
 
-            <button 
+            <button
               onClick={handleLogout}
               className="logout-btn"
               style={{
