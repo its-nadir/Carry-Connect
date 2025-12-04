@@ -47,8 +47,12 @@ export default function MyTripsPage() {
     return () => unsubscribe();
   }, [router]);
 
-  const handleDeleteClick = (tripId) => {
-    setTripToDelete(tripId);
+  const handleDeleteClick = (trip) => {
+    if (trip.status === "booked") {
+      alert("This trip has been booked and cannot be deleted. Please contact support or the shipper to resolve this.");
+      return;
+    }
+    setTripToDelete(trip.id);
     setIsModalOpen(true);
   };
 
@@ -153,8 +157,10 @@ export default function MyTripsPage() {
 
               <div className={styles.actions}>
                 <button
-                  onClick={() => handleDeleteClick(trip.id)}
+                  onClick={() => handleDeleteClick(trip)}
                   className={styles.deleteBtn}
+                  style={{ opacity: trip.status === 'booked' ? 0.5 : 1, cursor: trip.status === 'booked' ? 'not-allowed' : 'pointer' }}
+                  title={trip.status === 'booked' ? "Cannot delete booked trip" : "Delete trip"}
                 >
                   Delete
                 </button>
