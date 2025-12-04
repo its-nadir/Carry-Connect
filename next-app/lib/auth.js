@@ -1,170 +1,119 @@
-// Authentication helper functions
 import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
   signOut,
   onAuthStateChanged,
-  updateProfile,
   GoogleAuthProvider,
   signInWithPopup,
-  sendEmailVerification as firebaseSendEmailVerification,
   RecaptchaVerifier,
-  linkWithPhoneNumber
-} from 'firebase/auth';
-import { doc, setDoc, Timestamp } from 'firebase/firestore';
-import { auth, db } from './firebase';
-import { setPersistence, browserLocalPersistence } from 'firebase/auth';
+  linkWithPhoneNumber,
+  sendEmailVerification as firebaseSendEmailVerification
+} from "firebase/auth";
+import { auth, db } from "./firebase";
+import { doc, setDoc, getDoc, serverTimestamp } from "firebase/firestore";
 
-// Ensure persistence is set
-setPersistence(auth, browserLocalPersistence).catch((error) => {
-  console.error("Error setting persistence:", error);
-});
-
-/**
- * Sign up with email and password
- */
-export async function signUp(email, password, displayName, phoneNumber) {
+// Sign up a new user
+export const signUp = async (email, password, displayName, phoneNumber) => {
   try {
     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
     const user = userCredential.user;
 
-    // Update profile
-    await updateProfile(user, { displayName });
-
     // Create user document in Firestore
-    await setDoc(doc(db, 'users', user.uid), {
+    await setDoc(doc(db, "users", user.uid), {
+      uid: user.uid,
       email: user.email,
-      displayName: displayName,
-      phone: phoneNumber || "", // Save phone number
-      createdAt: Timestamp.now(),
-      updatedAt: Timestamp.now(),
-      verified: false,
-      completedTrips: 0,
-      packagesDelivered: 0,
-      totalEarnings: 0,
-      rating: 0,
-      reviewCount: 0
+      name: displayName || "",
+      phone: phoneNumber || "",
+      createdAt: serverTimestamp(),
+      role: "user"
     });
 
     return user;
   } catch (error) {
-    console.error('Error signing up:', error);
     throw error;
   }
-}
+};
 
-/**
- * Sign in with email and password
- */
-export async function signIn(email, password) {
+// Sign in existing user
+export const signIn = async (email, password) => {
   try {
     const userCredential = await signInWithEmailAndPassword(auth, email, password);
     return userCredential.user;
   } catch (error) {
-    console.error('Error signing in:', error);
     throw error;
   }
-}
+};
 
-/**
- * Sign in with Google
- */
-export async function signInWithGoogle() {
+// Sign in with Google
+export const signInWithGoogle = async () => {
   try {
     const provider = new GoogleAuthProvider();
-    const userCredential = await signInWithPopup(auth, provider);
-    const user = userCredential.user;
+    const result = await signInWithPopup(auth, provider);
+    const user = result.user;
 
-    // Check if user document exists, if not create it
-    const userDoc = doc(db, 'users', user.uid);
-    await setDoc(userDoc, {
-      email: user.email,
-      displayName: user.displayName,
-      photoURL: user.photoURL,
-      createdAt: Timestamp.now(),
-      updatedAt: Timestamp.now(),
-      verified: false,
-      completedTrips: 0,
-      packagesDelivered: 0,
-      totalEarnings: 0,
-      rating: 0,
-      reviewCount: 0
-    }, { merge: true });
+    // Check if user exists in Firestore, if not create one
+    const userDoc = await getDoc(doc(db, "users", user.uid));
+    if (!userDoc.exists()) {
+      await setDoc(doc(db, "users", user.uid), {
+        uid: user.uid,
+        email: user.email,
+        name: user.displayName || "",
+        createdAt: serverTimestamp(),
+        role: "user"
+      });
+    }
 
     return user;
   } catch (error) {
-    console.error('Error signing in with Google:', error);
     throw error;
   }
-}
+};
 
-/**
- * Sign out
- */
-export async function logOut() {
+// Sign out user
+export const logOut = async () => {
   try {
     await signOut(auth);
   } catch (error) {
-    console.error('Error signing out:', error);
     throw error;
   }
-}
+};
 
-/**
- * Listen to auth state changes
- */
-export function onAuthChange(callback) {
+// Listen for auth state changes
+export const onAuthChange = (callback) => {
   return onAuthStateChanged(auth, callback);
-}
+};
 
-/**
- * Get current user
- */
-export function getCurrentUser() {
-  return new Promise((resolve) => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      unsubscribe();
-      resolve(user);
-    });
-  });
-}
-
-/**
- * Send email verification
- */
-export async function sendEmailVerification(user) {
-  try {
-    await firebaseSendEmailVerification(user);
-  } catch (error) {
-    console.error('Error sending email verification:', error);
-    throw error;
-  }
-}
-
-/**
- * Setup Recaptcha Verifier
- */
-export function setupRecaptcha(elementId) {
+// Setup Recaptcha for phone verification
+export const setupRecaptcha = (containerId) => {
   if (!window.recaptchaVerifier) {
-    window.recaptchaVerifier = new RecaptchaVerifier(auth, elementId, {
-      'size': 'invisible',
-      'callback': () => {
-        // reCAPTCHA solved, allow signInWithPhoneNumber.
+    window.recaptchaVerifier = new RecaptchaVerifier(auth, containerId, {
+      size: "invisible",
+      callback: () => {
+        // reCAPTCHA solved
+      },
+      "expired-callback": () => {
+        // Response expired
       }
     });
   }
   return window.recaptchaVerifier;
-}
+};
 
-/**
- * Link Phone Number
- */
-export async function linkPhoneNumber(user, phoneNumber, appVerifier) {
+// Link phone number to user account
+export const linkPhoneNumber = async (user, phoneNumber, appVerifier) => {
   try {
     const confirmationResult = await linkWithPhoneNumber(user, phoneNumber, appVerifier);
     return confirmationResult;
   } catch (error) {
-    console.error('Error linking phone number:', error);
     throw error;
   }
-}
+};
+
+// Send email verification
+export const sendEmailVerification = async (user) => {
+  try {
+    await firebaseSendEmailVerification(user);
+  } catch (error) {
+    throw error;
+  }
+};
