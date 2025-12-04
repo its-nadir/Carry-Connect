@@ -63,47 +63,73 @@ export default function MyOrdersPage() {
                 ) : (
                     <div className={styles.ordersGrid}>
                         {orders.map((order) => (
-                            <div key={order.id} className={styles.orderCard}>
-                                <div className={styles.orderInfo}>
-                                    <h3>{order.description || "Package Delivery"}</h3>
-
-                                    <div className={styles.route}>
-                                        <span>{order.from}</span>
-                                        <i className="fa-solid fa-arrow-right arrow"></i>
-                                        <span>{order.to}</span>
-                                    </div>
-
-                                    <div className={styles.meta}>
-                                        <span>
-                                            <i className="fa-regular fa-calendar"></i>
-                                            {order.date?.toDate ? order.date.toDate().toLocaleDateString() : new Date(order.date).toLocaleDateString()}
-                                        </span>
-                                        <span>
-                                            <i className="fa-solid fa-weight-hanging"></i>
-                                            {order.packageSize}
-                                        </span>
-                                    </div>
-                                </div>
-
-                                <div className={styles.actions}>
-                                    <span className={`${styles.status} ${order.status === 'accepted' ? styles.statusAccepted :
-                                            order.status === 'rejected' ? styles.statusRejected :
-                                                styles.statusPending
-                                        }`}>
-                                        {order.status || "Pending"}
-                                    </span>
-
-                                    <span className={styles.price}>${order.price}</span>
-
-                                    <button className={styles.detailsBtn}>
-                                        View Details
-                                    </button>
-                                </div>
-                            </div>
+                            <OrderCard key={order.id} order={order} />
                         ))}
                     </div>
                 )}
             </div>
         </main>
+    );
+}
+
+function OrderCard({ order }) {
+    const [expanded, setExpanded] = useState(false);
+
+    return (
+        <div className={styles.orderCard}>
+            <div className={styles.orderInfo}>
+                <h3>{order.description || "Package Delivery"}</h3>
+
+                <div className={styles.route}>
+                    <span>{order.from}</span>
+                    <i className="fa-solid fa-arrow-right arrow"></i>
+                    <span>{order.to}</span>
+                </div>
+
+                <div className={styles.meta}>
+                    <span>
+                        <i className="fa-regular fa-calendar"></i>
+                        {order.date?.toDate ? order.date.toDate().toLocaleDateString() : new Date(order.date).toLocaleDateString()}
+                    </span>
+                    <span>
+                        <i className="fa-solid fa-weight-hanging"></i>
+                        {order.packageSize}
+                    </span>
+                </div>
+            </div>
+
+            <div className={styles.actions}>
+                <span className={`${styles.status} ${order.status === 'accepted' ? styles.statusAccepted :
+                    order.status === 'rejected' ? styles.statusRejected :
+                        styles.statusPending
+                    }`}>
+                    {order.status || "Pending"}
+                </span>
+
+                <span className={styles.price}>${order.price}</span>
+
+                <button
+                    className={styles.detailsBtn}
+                    onClick={() => setExpanded(!expanded)}
+                >
+                    {expanded ? "Hide Details" : "View Details"}
+                </button>
+            </div>
+
+            {expanded && (
+                <div style={{
+                    gridColumn: '1 / -1',
+                    marginTop: '20px',
+                    paddingTop: '20px',
+                    borderTop: '1px solid #eee',
+                    fontSize: '14px',
+                    color: '#666'
+                }}>
+                    <p><strong>Order ID:</strong> {order.id}</p>
+                    <p><strong>Booked on:</strong> {order.bookedAt?.toDate ? order.bookedAt.toDate().toLocaleDateString() : "N/A"}</p>
+                    <p><strong>Carrier ID:</strong> {order.carrierUid}</p>
+                </div>
+            )}
+        </div>
     );
 }

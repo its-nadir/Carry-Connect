@@ -277,13 +277,15 @@ export default function ProfilePage() {
               <span className={styles.verifiedBadge}><i className="fa-solid fa-check"></i> Email Verified</span>
             ) : (
               <button onClick={handleVerifyEmail} className={styles.unverifiedBadge} title="Click to verify email">
-                Email Pending (Verify)
+                <i className="fa-solid fa-triangle-exclamation"></i> Email Pending
               </button>
             )}
             {phoneVerified ? (
               <span className={styles.verifiedBadge}><i className="fa-solid fa-check"></i> Phone Verified</span>
             ) : (
-              <span className={styles.unverifiedBadge}>Phone Pending</span>
+              <span className={styles.unverifiedBadge}>
+                <i className="fa-solid fa-triangle-exclamation"></i> Phone Pending
+              </span>
             )}
           </div>
         </div>
@@ -369,8 +371,28 @@ export default function ProfilePage() {
             ) : (
               myOrders.map(order => (
                 <div key={order.id} className={styles.card}>
-                  <h3>Order #{order.id.slice(0, 8)}</h3>
-                  <p>Status: {order.status}</p>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+                    <h3 style={{ margin: 0 }}>{order.from} → {order.to}</h3>
+                    <span className={`${styles.status} ${order.status === 'accepted' ? styles.statusAccepted : order.status === 'rejected' ? styles.statusRejected : ''}`}>
+                      {order.status || "Pending"}
+                    </span>
+                  </div>
+                  <p style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <i className="fa-regular fa-calendar"></i>
+                    {order.date?.toDate ? order.date.toDate().toLocaleDateString() : new Date(order.date).toLocaleDateString()}
+                  </p>
+                  <p style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <i className="fa-solid fa-box"></i> {order.packageSize}
+                  </p>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '15px' }}>
+                    <span style={{ fontWeight: 'bold', fontSize: '18px' }}>${order.price}</span>
+                    <button
+                      onClick={() => router.push('/my-orders')}
+                      style={{ background: '#2d5bff', color: 'white', border: 'none', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer', fontSize: '12px' }}
+                    >
+                      View Details
+                    </button>
+                  </div>
                 </div>
               ))
             )}
