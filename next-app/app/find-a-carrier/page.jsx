@@ -199,7 +199,7 @@ function FindCarrierContent() {
                   <div className={styles.avatar}>{carrier.avatar || carrier.userName?.charAt(0) || 'U'}</div>
                   <div className={styles.headerInfo}>
                     <h3 className={styles.cardName}>
-                      {carrier.userName || carrier.name || 'Carrier'}
+                      {carrier.carrierName || carrier.userName || carrier.name || 'Carrier'}
                       {isMyTrip && <span className={styles.youBadge}>(You)</span>}
                     </h3>
                     <div className={styles.routeInfo}>
