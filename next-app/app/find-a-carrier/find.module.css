@@ -191,8 +191,148 @@
 }
 
 /* Make the search box behave nicely on this page */
+/* Make the search box behave nicely on this page */
 .searchBoxFind {
   max-width: 1150px;
   margin: 0 auto 20px !important;
-  position: static !important; /* in case home version used absolute/relative */
+  position: static !important;
+  /* in case home version used absolute/relative */
+}
+
+/* Filters Panel */
+.filtersPanel {
+  width: 90%;
+  max-width: 1150px;
+  margin: 0 auto 20px;
+  background: white;
+  padding: 20px;
+  border-radius: 12px;
+  border: 1px solid #e5e5e5;
+  display: flex;
+  gap: 30px;
+  align-items: center;
+  animation: slideDown 0.2s ease-out;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.filterGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1;
+  max-width: 300px;
+}
+
+.filterGroup label {
+  font-size: 14px;
+  font-weight: 500;
+  color: #4a5568;
+}
+
+.rangeInput {
+  width: 100%;
+  cursor: pointer;
+}
+
+.selectInput {
+  padding: 8px 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  font-size: 14px;
+  color: #2d3748;
+}
+
+.active {
+  background: #e6f0ff;
+  border-color: #2d5bff;
+  color: #2d5bff;
+}
+
+/* List View Overrides */
+.cardsList {
+  width: 90%;
+  max-width: 1150px;
+  margin: 0 auto 60px;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.cardList {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 15px 25px;
+}
+
+.cardList .cardHeader {
+  flex: 2;
+  align-items: center;
+}
+
+.cardList .headerInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.cardList .routeInfo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.cardList .routeText {
+  font-weight: 500;
+  color: #2d3748;
+}
+
+.cardList .cardBody {
+  flex: 1;
+  margin: 0;
+  display: flex;
+  align-items: center;
+}
+
+.cardList .description {
+  display: none;
+  /* Hide description in list view for compactness */
+}
+
+.cardList .cardFooter {
+  flex: 1;
+  margin: 0;
+  justify-content: flex-end;
+  gap: 20px;
+}
+
+.cardList .badge {
+  position: static;
+  margin-left: 15px;
+}
+
+.youBadge {
+  font-size: 12px;
+  color: #667eea;
+  margin-left: 8px;
+}
+
+.emptyState {
+  text-align: center;
+  padding: 80px 20px;
+  background: white;
+  border-radius: 20px;
+  margin: 20px auto;
+  max-width: 800px;
 }
