@@ -70,6 +70,15 @@
   text-align: center;
 }
 
+.success {
+  color: green;
+  background: #e6fffa;
+  padding: 10px;
+  border-radius: 5px;
+  margin-bottom: 15px;
+  text-align: center;
+}
+
 .submitBtn {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
@@ -117,4 +126,36 @@
 
 .switchBtn:hover {
   color: #764ba2;
+}
+
+.divider {
+  text-align: center;
+  margin: 10px 0;
+}
+
+.divider span {
+  color: #666;
+  font-size: 14px;
+}
+
+.googleBtn {
+  width: 100%;
+  padding: 12px;
+  background-color: #fff;
+  color: #333;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 15px;
+  transition: background-color 0.2s;
+}
+
+.googleBtn:hover {
+  background-color: #f9f9f9;
 }

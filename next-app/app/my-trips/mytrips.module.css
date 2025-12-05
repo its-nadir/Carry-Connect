@@ -187,3 +187,34 @@
 .deleteBtn:hover {
   background: #d32f2f;
 }
+
+.deleteBtnDisabled {
+  flex: 1;
+  padding: 10px;
+  background: #f44336;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: not-allowed;
+  font-weight: 600;
+  opacity: 0.5;
+}
+
+/* Alerts */
+.alertSuccess,
+.alertError {
+  padding: 10px;
+  border-radius: 5px;
+  margin-bottom: 15px;
+  text-align: center;
+}
+
+.alertSuccess {
+  color: green;
+  background: #e6fffa;
+}
+
+.alertError {
+  color: red;
+  background: #ffe6e6;
+}

@@ -107,12 +107,12 @@ export default function MyTripsPage() {
       </div>
 
       {successMsg && (
-        <div style={{ color: 'green', background: '#e6fffa', padding: '10px', borderRadius: '5px', marginBottom: '15px', textAlign: 'center' }}>
+        <div className={styles.alertSuccess}>
           {successMsg}
         </div>
       )}
       {errorMsg && (
-        <div style={{ color: 'red', background: '#ffe6e6', padding: '10px', borderRadius: '5px', marginBottom: '15px', textAlign: 'center' }}>
+        <div className={styles.alertError}>
           {errorMsg}
         </div>
       )}
@@ -169,8 +169,7 @@ export default function MyTripsPage() {
               <div className={styles.actions}>
                 <button
                   onClick={() => handleDeleteClick(trip)}
-                  className={styles.deleteBtn}
-                  style={{ opacity: trip.status === 'booked' ? 0.5 : 1, cursor: trip.status === 'booked' ? 'not-allowed' : 'pointer' }}
+                  className={trip.status === 'booked' ? styles.deleteBtnDisabled : styles.deleteBtn}
                   title={trip.status === 'booked' ? "Cannot delete booked trip" : "Delete trip"}
                 >
                   Delete

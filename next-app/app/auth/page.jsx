@@ -133,7 +133,7 @@ export default function AuthPage() {
           )}
 
           {successMsg && (
-            <div className={styles.success} style={{ color: 'green', background: '#e6fffa', padding: '10px', borderRadius: '5px', marginBottom: '15px', textAlign: 'center' }}>
+            <div className={styles.success}>
               {successMsg}
             </div>
           )}
@@ -146,8 +146,8 @@ export default function AuthPage() {
             {loading ? "Please wait..." : (isLogin ? "Login" : "Sign Up")}
           </button>
 
-          <div style={{ textAlign: "center", margin: "10px 0" }}>
-            <span style={{ color: "#666", fontSize: "14px" }}>OR</span>
+          <div className={styles.divider}>
+            <span>OR</span>
           </div>
 
           <button
@@ -165,22 +165,6 @@ export default function AuthPage() {
               }
             }}
             className={styles.googleBtn}
-            style={{
-              width: "100%",
-              padding: "12px",
-              backgroundColor: "#fff",
-              color: "#333",
-              border: "1px solid #ddd",
-              borderRadius: "8px",
-              fontSize: "16px",
-              fontWeight: "600",
-              cursor: "pointer",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: "10px",
-              marginBottom: "15px"
-            }}
           >
             <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" style={{ width: "20px", height: "20px" }} />
             Sign in with Google

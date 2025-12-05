@@ -99,20 +99,12 @@ export default function AddTripPage() {
 
         <form onSubmit={handleSubmit} className={styles.form}>
           {errorMsg && (
-            <div style={{
-              position: 'fixed', top: '20px', left: '50%', transform: 'translateX(-50%)',
-              zIndex: 1000, color: 'white', background: '#ff4444', padding: '15px 25px',
-              borderRadius: '8px', boxShadow: '0 4px 6px rgba(0,0,0,0.1)', fontWeight: '500'
-            }}>
+            <div className={styles.alertError}>
               {errorMsg}
             </div>
           )}
           {successMsg && (
-            <div style={{
-              position: 'fixed', top: '20px', left: '50%', transform: 'translateX(-50%)',
-              zIndex: 1000, color: 'white', background: '#00C851', padding: '15px 25px',
-              borderRadius: '8px', boxShadow: '0 4px 6px rgba(0,0,0,0.1)', fontWeight: '500'
-            }}>
+            <div className={styles.alertSuccess}>
               {successMsg}
             </div>
           )}

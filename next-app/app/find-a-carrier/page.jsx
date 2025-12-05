@@ -83,7 +83,7 @@ function FindCarrierContent() {
 
   if (loading) {
     return (
-      <div style={{ textAlign: 'center', padding: '100px', fontSize: '20px' }}>
+      <div className={styles.loading}>
         Loading carriers...
       </div>
     );
@@ -144,18 +144,6 @@ function FindCarrierContent() {
             }}
             className={styles.clearFiltersBtn}
             title="Reset all filters"
-            style={{
-              background: 'none',
-              border: '1px solid #ddd',
-              borderRadius: '50%',
-              width: '36px',
-              height: '36px',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: '#666'
-            }}
           >
             <i className="fa-solid fa-rotate-right"></i>
           </button>
@@ -167,9 +155,9 @@ function FindCarrierContent() {
 
       {filteredCarriers.length === 0 ? (
         <div className={styles.emptyState}>
-          <div style={{ fontSize: '48px', marginBottom: '20px' }}>📦</div>
-          <h3 style={{ marginBottom: '10px' }}>No trips found</h3>
-          <p style={{ color: '#666', marginBottom: '20px' }}>
+          <div className={styles.emptyIcon}>📦</div>
+          <h3 className={styles.emptyTitle}>No trips found</h3>
+          <p className={styles.emptyText}>
             Try adjusting your search or filters.
           </p>
           <button
@@ -177,14 +165,7 @@ function FindCarrierContent() {
               setPriceRange(1000);
               setSelectedTransport("All");
             }}
-            style={{
-              background: '#edf2f7',
-              color: '#4a5568',
-              padding: '8px 16px',
-              borderRadius: '8px',
-              border: 'none',
-              cursor: 'pointer'
-            }}
+            className={styles.clearBtn}
           >
             Clear Filters
           </button>
@@ -227,7 +208,7 @@ function FindCarrierContent() {
                 <div className={styles.cardFooter}>
                   <h3 className={styles.price}>${carrier.price}</h3>
                   {isMyTrip ? (
-                    <button disabled className={styles.bookBtn} style={{ opacity: 0.5, cursor: 'not-allowed', background: '#ccc' }}>
+                    <button disabled className={styles.bookBtnDisabled}>
                       Your Trip
                     </button>
                   ) : (

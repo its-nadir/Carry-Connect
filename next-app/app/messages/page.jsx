@@ -97,7 +97,7 @@ export default function MessagesPage() {
               {/* Messages Area */}
               <div className={styles.messages}>
                 {messages.length === 0 ? (
-                  <div style={{ textAlign: "center", color: "#aaa", marginTop: "50px" }}>
+                  <div className={styles.emptyState}>
                     Start the conversation
                   </div>
                 ) : (
@@ -133,32 +133,19 @@ export default function MessagesPage() {
               </div>
 
               {/* Input */}
-              <div style={{ padding: "20px", background: "#f9f9f9", borderTop: "1px solid #eee" }}>
-                <div style={{ display: "flex", gap: "10px" }}>
+              <div className={styles.inputArea}>
+                <div className={styles.inputWrapper}>
                   <input
                     type="text"
                     value={input}
                     onChange={(e) => setInput(e.target.value)}
                     onKeyPress={(e) => e.key === "Enter" && send()}
                     placeholder="Type a message..."
-                    style={{
-                      flex: 1,
-                      padding: "12px 16px",
-                      borderRadius: "25px",
-                      border: "1px solid #ddd",
-                      outline: "none"
-                    }}
+                    className={styles.inputField}
                   />
                   <button
                     onClick={send}
-                    style={{
-                      padding: "12px 24px",
-                      background: "#0077ff",
-                      color: "white",
-                      border: "none",
-                      borderRadius: "25px",
-                      cursor: "pointer"
-                    }}
+                    className={styles.sendBtn}
                   >
                     Send
                   </button>
@@ -166,7 +153,7 @@ export default function MessagesPage() {
               </div>
             </>
           ) : (
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%", color: "#999" }}>
+            <div className={styles.noChatSelected}>
               <h3>Select a chat to start messaging</h3>
             </div>
           )}

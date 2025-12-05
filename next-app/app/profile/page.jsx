@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import styles from "./profile.module.css";
+import ConfirmationModal from "../components/ConfirmationModal";
 
 export default function ProfilePage() {
   const router = useRouter();
@@ -518,7 +519,17 @@ export default function ProfilePage() {
       {/* Recaptcha Container */}
       <div id="recaptcha-container"></div>
 
-      {/* Phone Verification Modal */}
+      {/* Generic Success/Error Modal */}
+      <ConfirmationModal
+        isOpen={!!modalMessage}
+        onClose={() => setModalMessage(null)}
+        onConfirm={() => setModalMessage(null)}
+        title={modalType === 'success' ? 'Success' : 'Notice'}
+        message={modalMessage}
+        isAlert={true}
+      />
+
+      {/* Phone Verification Modal - Kept custom for now as it has inputs */}
       {isVerifyingPhone && (
         <div className={styles.modalOverlay}>
           <div className={styles.modalContent}>
@@ -570,24 +581,6 @@ export default function ProfilePage() {
                 </>
               )
             )}
-          </div>
-        </div>
-      )}
-
-      {/* Generic Success/Error Modal */}
-      {modalMessage && (
-        <div className={styles.modalOverlay}>
-          <div className={styles.modalContent}>
-            <h3 className={styles.modalTitle}>{modalType === 'success' ? 'Success' : 'Notice'}</h3>
-            <p className={styles.modalText}>{modalMessage}</p>
-            <div className={styles.modalActions}>
-              <button
-                className={styles.confirmBtn}
-                onClick={() => setModalMessage(null)}
-              >
-                OK
-              </button>
-            </div>
           </div>
         </div>
       )}

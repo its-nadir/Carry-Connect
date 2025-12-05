@@ -253,22 +253,11 @@ export async function getCarriers(filters = {}) {
 // Book a trip
 export const bookTrip = async (tripId, { weight, pickupLocation, dropoffLocation, reward }) => {
   // Ensure auth is ready
-  let user = auth.currentUser;
-  if (!user) {
-    user = await new Promise(resolve => {
-      const timeout = setTimeout(() => {
-        unsubscribe();
-        resolve(null);
-      }, 4000);
+  const user = auth.currentUser;
 
-      const unsubscribe = onAuthChange((u) => {
-        if (u) {
-          clearTimeout(timeout);
-          unsubscribe();
-          resolve(u);
-        }
-      });
-    });
+  if (!user) {
+    console.error("bookTrip: User is not authenticated.");
+    throw new Error("Login required");
   }
 
   if (!user) {

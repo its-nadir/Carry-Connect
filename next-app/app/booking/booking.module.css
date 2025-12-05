@@ -168,6 +168,14 @@
     cursor: not-allowed;
 }
 
+.error {
+    text-align: center;
+    padding: 40px;
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
 .errorAlert {
     background: #ffe6e6;
     color: #d32f2f;

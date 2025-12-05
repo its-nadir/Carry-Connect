@@ -5,6 +5,12 @@
   padding-top: 60px;
 }
 
+.loading {
+  text-align: center;
+  padding: 100px;
+  font-size: 20px;
+}
+
 /* ---------- SEARCH CARD ---------- */
 .searchCard {
   background: white;
@@ -190,7 +196,21 @@
   background: #204acc;
 }
 
-/* Make the search box behave nicely on this page */
+.bookBtnDisabled {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 14px;
+  background: #ccc;
+  color: white;
+  border-radius: 8px;
+  border: none;
+  cursor: not-allowed;
+  text-decoration: none;
+  font-size: 14px;
+  opacity: 0.5;
+}
+
 /* Make the search box behave nicely on this page */
 .searchBoxFind {
   max-width: 1150px;
@@ -257,6 +277,19 @@
   background: #e6f0ff;
   border-color: #2d5bff;
   color: #2d5bff;
+}
+
+.clearFiltersBtn {
+  background: none;
+  border: 1px solid #ddd;
+  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #666;
 }
 
 /* List View Overrides */
@@ -335,4 +368,27 @@
   border-radius: 20px;
   margin: 20px auto;
   max-width: 800px;
+}
+
+.emptyIcon {
+  font-size: 48px;
+  margin-bottom: 20px;
+}
+
+.emptyTitle {
+  margin-bottom: 10px;
+}
+
+.emptyText {
+  color: #666;
+  margin-bottom: 20px;
+}
+
+.clearBtn {
+  background: #edf2f7;
+  color: #4a5568;
+  padding: 8px 16px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
 }
