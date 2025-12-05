@@ -11,7 +11,7 @@ export default function Home() {
         <div className="main-content">
           <div className="text-content">
             <h1>
-              Send Packages Globally
+              E Send Packages Globally
               <br />
               with Trusted Travelers
             </h1>
