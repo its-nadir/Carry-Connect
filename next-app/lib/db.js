@@ -229,8 +229,6 @@ export const listenToMyTrips = (callback) => {
 export async function getCarriers(filters = {}) {
   try {
     let q = collection(db, 'trips'); // Assuming 'carriers' in firestore.js meant 'trips' collection
-    // Note: The original firestore.js used 'carriers' collection, but db.js uses 'trips'. 
-    // I am standardizing on 'trips' as it seems to be the active one used in the app logic I saw.
 
     if (filters.from) q = query(q, where('from', '==', filters.from));
     if (filters.to) q = query(q, where('to', '==', filters.to));
@@ -254,11 +252,6 @@ export async function getCarriers(filters = {}) {
 export const bookTrip = async (tripId, { weight, pickupLocation, dropoffLocation, reward }) => {
   // Ensure auth is ready
   const user = auth.currentUser;
-
-  if (!user) {
-    console.error("bookTrip: User is not authenticated.");
-    throw new Error("Login required");
-  }
 
   if (!user) {
     console.error("bookTrip: User is not authenticated.");
@@ -325,9 +318,13 @@ export const setCurrentTripId = (id) => currentTripId = id;
 
 export const sendTripMessage = async (text) => {
   if (!currentTripId || !auth.currentUser) return;
+  
+  // START CHANGE: USE DISPLAY NAME FOR CONSISTENCY 
+  const senderName = auth.currentUser.displayName || auth.currentUser.email; // ADDED THIS LINE
+
   await addDoc(collection(db, "trips", currentTripId, "messages"), {
     text,
-    sender: auth.currentUser.email,
+    sender: senderName, // CHANGED FROM auth.currentUser.email TO senderName
     senderUid: auth.currentUser.uid,
     sentAt: serverTimestamp()
   });
@@ -341,6 +338,7 @@ export const listenToTripChat = (callback) => {
     callback(messages);
   });
 };
+// END CHANGE
 
 // Generic conversation helpers (from firestore.js)
 export async function getConversations(userId) {
