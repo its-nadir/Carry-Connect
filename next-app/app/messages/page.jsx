@@ -20,7 +20,7 @@ export default function MessagesPage() {
   const [input, setInput] = useState("");
   const messagesEndRef = useRef(null);
 
-  // 1. AUTH LISTENER (GET CURRENT USER)
+  // GET CURRENT USER
   useEffect(() => {
     const unsubscribeAuth = onAuthChange((currentUser) => {
       setUser(currentUser);
@@ -28,7 +28,7 @@ export default function MessagesPage() {
     return () => unsubscribeAuth();
   }, []);
 
-  // 2. FETCH CONVERSATIONS (TRIPS THE USER IS INVOLVED IN)
+  // TRIPS THE USER IS INVOLVED IN
   useEffect(() => {
     if (!user) {
         setConversations([]);
@@ -79,8 +79,8 @@ export default function MessagesPage() {
   }, [user]); // DEPENDENCY ON USER ENSURES THIS RUNS ONLY WHEN AUTH IS READY
 
 
-  // 3. LISTENER MANAGEMENT (STARTS/STOPS THE CHAT STREAM)
-  // THIS REPLACES THE OLD openChat LISTENER LOGIC
+
+  // REPLACES THE OLD openChat LISTENER LOGIC
   useEffect(() => {
     if (!selectedTripId) {
         setMessages([]); // Clear messages when no trip is selected
