@@ -225,12 +225,12 @@ export const listenToMyTrips = (callback) => {
   });
 };
 
-// Legacy/Helper functions from firestore.js (adapted to match db.js style where possible)
+// Legacy/Helper functions from firestore.js
 export async function getCarriers(filters = {}) {
   try {
     let q = collection(db, 'trips'); // Assuming 'carriers' in firestore.js meant 'trips' collection
-    // Note: The original firestore.js used 'carriers' collection, but db.js uses 'trips'. 
-    // I am standardizing on 'trips' as it seems to be the active one used in the app logic I saw.
+    
+    
 
     if (filters.from) q = query(q, where('from', '==', filters.from));
     if (filters.to) q = query(q, where('to', '==', filters.to));
@@ -273,8 +273,7 @@ export const bookTrip = async (tripId, { weight, pickupLocation, dropoffLocation
     await runTransaction(db, async (transaction) => {
       console.log("bookTrip: Transaction started");
 
-      // Force token refresh inside transaction context (optional but good)
-      // await user.getIdToken(true); 
+      
 
       const tripDoc = await transaction.get(tripRef);
       console.log("bookTrip: Trip doc exists?", tripDoc.exists());
