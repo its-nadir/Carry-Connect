@@ -10,84 +10,41 @@ body {
   color: #111827;
 }
 
+/* ============================================
+   NAVBAR MAIN CONTAINER
+   ============================================ */
 .navbar {
   display: flex;
-  justify-content: space-around;
+  justify-content: space-between;
   align-items: center;
   background-color: white;
-  padding: 10px 30px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  padding: 12px 40px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
   position: sticky;
   top: 0;
   z-index: 100;
+  gap: 30px;
+}
+
+/* ============================================
+   NAVBAR LEFT - LOGO SECTION
+   ============================================ */
+.navbar-left {
+  flex-shrink: 0;
 }
 
 .navbar-left .logo {
   font-size: 1.5rem;
   font-weight: 700;
-  color: #0077ff;
   text-decoration: none;
-}
-
-.navbar-center a {
-  margin: 0 15px;
-  text-decoration: none;
-  color: #333;
-  font-weight: 500;
-  transition: color 0.2s ease;
-}
-
-.navbar-center a:hover {
-  color: #0077ff;
-}
-
-.navbar-right {
   display: flex;
   align-items: center;
-  gap: 15px;
+  gap: 10px;
+  transition: opacity 0.2s ease;
 }
 
-.icon {
-  color: #333;
-  font-size: 1.2rem;
-  transition: color 0.2s ease;
-}
-
-.icon-wrap {
-  position: relative;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.icon-badge {
-  position: absolute;
-  top: -6px;
-  right: -6px;
-  width: 10px;
-  height: 10px;
-  border-radius: 999px;
-  background: #ff3b30;
-  border: 2px solid white;
-}
-
-.icon:hover {
-  color: #0077ff;
-}
-
-.add-trip-btn {
-  background-color: #0077ff;
-  color: white;
-  border: none;
-  padding: 8px 16px;
-  border-radius: 6px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background 0.2s ease;
-}
-
-.add-trip-btn:hover {
-  background-color: #005fcc;
+.navbar-left .logo:hover {
+  opacity: 0.8;
 }
 
 .cc-logo {
@@ -97,63 +54,77 @@ body {
 }
 
 .cc-logoMark {
-  width: 38px;
-  height: 38px;
-  border-radius: 12px;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
   background: linear-gradient(135deg, #0077ff, #7c3aed);
   display: inline-flex;
   align-items: center;
   justify-content: center;
   padding: 2px;
-  box-shadow: 0 6px 16px rgba(0, 119, 255, 0.18);
+  box-shadow: 0 4px 12px rgba(0, 119, 255, 0.15);
+  flex-shrink: 0;
 }
 
 .cc-logoMark img {
   background: white;
-  border-radius: 10px;
-  padding: 6px;
+  border-radius: 8px;
+  padding: 5px;
 }
 
 .cc-brandText {
-  font-size: 1.35rem;
+  font-size: 1.2rem;
   font-weight: 800;
   background: linear-gradient(90deg, #0077ff, #7c3aed);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
+  letter-spacing: -0.5px;
 }
 
-.cc-btn {
-  border: 0;
-  border-radius: 10px;
-  padding: 8px 14px;
-  font-weight: 700;
-  cursor: pointer;
-  text-decoration: none;
-  display: inline-flex;
+/* ============================================
+   NAVBAR CENTER - NAVIGATION LINKS
+   ============================================ */
+.navbar-center {
+  display: flex;
   align-items: center;
+  gap: 8px;
+  flex: 1;
   justify-content: center;
 }
 
-.cc-btnPrimary {
-  background: linear-gradient(90deg, #0077ff, #7c3aed);
-  color: white;
+.nav-link {
+  padding: 8px 14px;
+  text-decoration: none;
+  color: #4b5563;
+  font-weight: 500;
+  font-size: 0.95rem;
+  transition: all 0.2s ease;
+  border-radius: 8px;
+  position: relative;
 }
 
-.cc-btnDanger {
-  background: linear-gradient(90deg, #ef4444, #dc2626);
-  color: white;
+.nav-link:hover {
+  color: #0077ff;
+  background-color: #f0f7ff;
 }
 
-.cc-iconBtn {
-  width: 40px;
-  height: 40px;
-  border-radius: 10px;
-  transition: background 0.2s ease;
+/* ============================================
+   NAVBAR RIGHT - ACTIONS & USER MENU
+   ============================================ */
+.navbar-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
 }
 
-.cc-iconBtn:hover {
-  background: #f3f4f6;
+/* ============================================
+   SEARCH FUNCTIONALITY
+   ============================================ */
+.cc-search {
+  display: flex;
+  align-items: center;
 }
 
 .cc-searchBox {
@@ -162,80 +133,318 @@ body {
   gap: 8px;
   background: #f3f4f6;
   border: 1px solid #e5e7eb;
-  border-radius: 12px;
-  padding: 8px 10px;
+  border-radius: 10px;
+  padding: 8px 12px;
+  transition: all 0.2s ease;
+}
+
+.cc-searchBox:focus-within {
+  border-color: #0077ff;
+  background: #f0f7ff;
+  box-shadow: 0 0 0 3px rgba(0, 119, 255, 0.1);
 }
 
 .cc-searchIcon {
-  color: #6b7280;
+  color: #9ca3af;
   font-size: 14px;
+  flex-shrink: 0;
 }
 
 .cc-searchInput {
-  width: 220px;
+  width: 200px;
   border: 0;
   outline: none;
   background: transparent;
   font-size: 14px;
+  color: #111827;
+  font-family: "Poppins", sans-serif;
+}
+
+.cc-searchInput::placeholder {
+  color: #9ca3af;
 }
 
 .cc-searchClose {
   border: 0;
   background: transparent;
   cursor: pointer;
+  color: #9ca3af;
+  font-size: 14px;
+  flex-shrink: 0;
+  transition: color 0.2s ease;
+}
+
+.cc-searchClose:hover {
   color: #6b7280;
 }
 
+/* ============================================
+   ICON BUTTONS
+   ============================================ */
+.icon-wrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+}
+
+.cc-iconBtn {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  transition: all 0.2s ease;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cc-iconBtn:hover {
+  background: #f3f4f6;
+}
+
+.icon {
+  color: #6b7280;
+  font-size: 1.1rem;
+  transition: color 0.2s ease;
+}
+
+.cc-iconBtn:hover .icon {
+  color: #0077ff;
+}
+
+.icon-badge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: #ef4444;
+  border: 2px solid white;
+  box-shadow: 0 0 0 2px #f3f4f6;
+}
+
+/* ============================================
+   PROFILE AVATAR
+   ============================================ */
+.profile-avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: #f3f4f6;
+  text-decoration: none;
+  transition: all 0.2s ease;
+  border: 2px solid transparent;
+}
+
+.profile-avatar:hover {
+  background: #e5e7eb;
+  border-color: #0077ff;
+}
+
+.avatar-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #6b7280;
+  font-size: 1rem;
+}
+
+/* ============================================
+   BUTTONS
+   ============================================ */
+.cc-btn {
+  border: 0;
+  border-radius: 10px;
+  padding: 8px 16px;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.9rem;
+  transition: all 0.2s ease;
+  font-family: "Poppins", sans-serif;
+}
+
+.cc-btnPrimary {
+  background: linear-gradient(90deg, #0077ff, #7c3aed);
+  color: white;
+  box-shadow: 0 2px 8px rgba(0, 119, 255, 0.2);
+}
+
+.cc-btnPrimary:hover {
+  box-shadow: 0 4px 16px rgba(0, 119, 255, 0.3);
+  transform: translateY(-1px);
+}
+
+.cc-btnSecondary {
+  background: transparent;
+  color: #ef4444;
+  border: 1.5px solid #fee2e2;
+  font-weight: 600;
+}
+
+.cc-btnSecondary:hover {
+  background: #fee2e2;
+  border-color: #fecaca;
+}
+
+.cc-btnDanger {
+  background: linear-gradient(90deg, #ef4444, #dc2626);
+  color: white;
+}
+
+.cc-btnDanger:hover {
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+}
+
+/* ============================================
+   MOBILE MENU TOGGLE
+   ============================================ */
 .cc-mobileToggle {
   display: none;
   border: 0;
   background: transparent;
   cursor: pointer;
   font-size: 20px;
+  color: #111827;
+  transition: color 0.2s ease;
 }
 
+.cc-mobileToggle:hover {
+  color: #0077ff;
+}
+
+/* ============================================
+   MOBILE MENU
+   ============================================ */
 .cc-mobileMenu {
   display: none;
   background: white;
   border-bottom: 1px solid #e5e7eb;
-  padding: 12px 18px;
+  padding: 12px 20px;
+  animation: slideDown 0.3s ease;
 }
 
-.cc-mobileMenu a {
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.mobile-nav-link {
   display: block;
-  padding: 10px;
+  padding: 12px 14px;
   border-radius: 10px;
   text-decoration: none;
-  color: #111827;
-  font-weight: 600;
+  color: #4b5563;
+  font-weight: 500;
+  margin-bottom: 4px;
+  transition: all 0.2s ease;
 }
 
-.cc-mobileMenu a:hover {
+.mobile-nav-link:hover {
   background: #f3f4f6;
+  color: #0077ff;
 }
 
 .cc-mobileLogout {
   width: 100%;
-  margin-top: 8px;
+  margin-top: 12px;
   background: #fee2e2;
   color: #b91c1c;
   border: 0;
   border-radius: 10px;
-  padding: 10px 12px;
-  font-weight: 800;
+  padding: 12px 14px;
+  font-weight: 600;
   cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: "Poppins", sans-serif;
+}
+
+.cc-mobileLogout:hover {
+  background: #fecaca;
 }
 
 .cc-mobileAuth {
-  margin-top: 8px;
+  display: block;
+  margin-top: 12px;
   background: linear-gradient(90deg, #0077ff, #7c3aed);
   color: white;
   text-align: center;
+  padding: 12px 14px;
+  border-radius: 10px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+
+.cc-mobileAuth:hover {
+  box-shadow: 0 4px 12px rgba(0, 119, 255, 0.3);
+}
+
+/* ============================================
+   RESPONSIVE DESIGN
+   ============================================ */
+@media (max-width: 1024px) {
+  .navbar {
+    padding: 12px 24px;
+    gap: 20px;
+  }
+
+  .navbar-center {
+    gap: 4px;
+  }
+
+  .nav-link {
+    padding: 6px 12px;
+    font-size: 0.9rem;
+  }
+
+  .cc-searchInput {
+    width: 160px;
+  }
 }
 
 @media (max-width: 768px) {
+  .navbar {
+    padding: 12px 16px;
+    gap: 12px;
+  }
+
   .navbar-center {
     display: none;
+  }
+
+  .navbar-left .logo {
+    gap: 8px;
+  }
+
+  .cc-brandText {
+    display: none;
+  }
+
+  .cc-logoMark {
+    width: 32px;
+    height: 32px;
   }
 
   .cc-mobileToggle {
@@ -245,6 +454,11 @@ body {
     width: 40px;
     height: 40px;
     border-radius: 10px;
+    margin-left: auto;
+  }
+
+  .cc-mobileToggle:hover {
+    background: #f3f4f6;
   }
 
   .cc-mobileMenu {
@@ -252,6 +466,56 @@ body {
   }
 
   .cc-searchInput {
-    width: 150px;
+    width: 120px;
+  }
+
+  .navbar-right {
+    gap: 8px;
+  }
+
+  .cc-btn {
+    padding: 8px 12px;
+    font-size: 0.85rem;
+  }
+
+  .cc-iconBtn {
+    width: 36px;
+    height: 36px;
+  }
+
+  .icon {
+    font-size: 1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .navbar {
+    padding: 10px 12px;
+  }
+
+  .cc-search {
+    display: none;
+  }
+
+  .navbar-right {
+    gap: 6px;
+  }
+
+  .cc-iconBtn {
+    width: 36px;
+    height: 36px;
+  }
+
+  .cc-btn {
+    padding: 6px 10px;
+    font-size: 0.8rem;
+  }
+
+  .cc-mobileMenu {
+    padding: 10px 12px;
+  }
+
+  .mobile-nav-link {
+    padding: 10px 12px;
   }
 }
