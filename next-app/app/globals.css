@@ -10,8 +10,7 @@ body {
   color: #111827;
 }
 
-/* ================= ORIGINAL SITE STYLES ================= */
-
+/* Navbar */
 .navbar {
   display: flex;
   justify-content: space-around;
@@ -29,6 +28,9 @@ body {
   font-weight: 700;
   color: #0077ff;
   text-decoration: none;
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
 .navbar-center a {
@@ -85,8 +87,14 @@ body {
   border-radius: 6px;
   font-weight: 600;
   cursor: pointer;
+  transition: background 0.2s ease;
 }
 
+.add-trip-btn:hover {
+  background-color: #005fcc;
+}
+
+/* Main Section */
 .main {
   display: flex;
   flex-direction: column;
@@ -106,88 +114,105 @@ body {
   gap: 40px;
 }
 
-/* ================= NAVBAR ONLY ENHANCEMENTS ================= */
-
-.cc-navbar .cc-logo {
-  display: flex;
-  align-items: center;
-  gap: 10px;
+.text-content {
+  flex: 1;
+  min-width: 300px;
 }
 
-.cc-navbar .cc-logoMark {
-  width: 38px;
-  height: 38px;
+.text-content h1 {
+  font-size: 2.5rem;
+  line-height: 1.2;
+  font-weight: 700;
+  margin-bottom: 16px;
+}
+
+.text-content p {
+  font-size: 1rem;
+  color: #4b5563;
+  line-height: 1.6;
+  margin-bottom: 24px;
+}
+
+.buttons {
+  display: flex;
+  gap: 12px;
+}
+
+.primary-btn {
+  background-color: #2563eb;
+  color: #fff;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background 0.3s ease;
+}
+
+.primary-btn:hover {
+  background-color: #1d4ed8;
+}
+
+.secondary-btn {
+  background-color: transparent;
+  border: 1.5px solid #2563eb;
+  color: #2563eb;
+  padding: 12px 24px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.secondary-btn:hover {
+  background-color: #2563eb;
+  color: #fff;
+}
+
+.image-content img {
+  width: 100%;
+  max-width: 480px;
   border-radius: 12px;
+  object-fit: cover;
+}
+
+/* Search Box */
+.search-box {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  background: #fff;
+  padding: 20px;
+  border-radius: 16px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+  position: absolute;
+  bottom: -40px;
+  width: 90%;
+  max-width: 1000px;
+}
+
+/* ================= NAVBAR VISUAL ENHANCEMENTS ONLY ================= */
+
+.cc-logoMark {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
   background: linear-gradient(135deg, #0077ff, #7c3aed);
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 2px;
 }
 
-.cc-navbar .cc-logoMark img {
+.cc-logoMark img {
   background: white;
-  border-radius: 10px;
-  padding: 6px;
+  border-radius: 8px;
+  padding: 4px;
 }
 
-.cc-navbar .cc-brandText {
-  font-size: 1.35rem;
+.cc-brandText {
   font-weight: 800;
   background: linear-gradient(90deg, #0077ff, #7c3aed);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
-}
-
-.cc-navbar .cc-btn {
-  border-radius: 10px;
-  padding: 8px 14px;
-  font-weight: 700;
-}
-
-.cc-navbar .cc-btnPrimary {
-  background: linear-gradient(90deg, #0077ff, #7c3aed);
-  color: white;
-}
-
-.cc-navbar .cc-btnDanger {
-  background: linear-gradient(90deg, #ef4444, #dc2626);
-  color: white;
-}
-
-.cc-navbar .cc-iconBtn {
-  width: 40px;
-  height: 40px;
-  border-radius: 10px;
-}
-
-.cc-navbar .cc-iconBtn:hover {
-  background: #f3f4f6;
-}
-
-.cc-navbar .cc-searchBox {
-  background: #f3f4f6;
-  border-radius: 12px;
-  padding: 6px 10px;
-}
-
-.cc-navbar .cc-searchInput {
-  border: 0;
-  outline: none;
-  background: transparent;
-}
-
-.cc-navbar .cc-mobileToggle {
-  display: none;
-}
-
-@media (max-width: 768px) {
-  .cc-navbar .navbar-center {
-    display: none;
-  }
-
-  .cc-navbar .cc-mobileToggle {
-    display: inline-flex;
-  }
 }
