@@ -1,257 +1,271 @@
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
+"use client"
 
-body {
-  font-family: "Poppins", sans-serif;
-  background-color: #f9f9f9;
-  color: #111827;
-}
+import { useState, useEffect } from "react"
+import Link from "next/link"
+import Image from "next/image"
+import { useRouter } from "next/navigation"
 
-.navbar {
-  display: flex;
-  justify-content: space-around;
-  align-items: center;
-  background-color: white;
-  padding: 10px 30px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-  position: sticky;
-  top: 0;
-  z-index: 100;
-}
+export default function Navbar() {
+  const router = useRouter()
+  const [user, setUser] = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [hasUnread, setHasUnread] = useState(false)
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const [isSearchOpen, setIsSearchOpen] = useState(false)
 
-.navbar-left .logo {
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: #0077ff;
-  text-decoration: none;
-}
+  useEffect(() => {
+    async function checkAuth() {
+      try {
+        const { onAuthChange } = await import("../../lib/auth")
+        const unsubscribe = onAuthChange((currentUser) => {
+          setUser(currentUser)
+          setLoading(false)
+        })
+        return () => unsubscribe()
+      } catch (error) {
+        console.error("Auth error:", error)
+        setLoading(false)
+      }
+    }
+    checkAuth()
+  }, [])
 
-.navbar-center a {
-  margin: 0 15px;
-  text-decoration: none;
-  color: #333;
-  font-weight: 500;
-  transition: color 0.2s ease;
-}
+  useEffect(() => {
+    if (!user) {
+      setHasUnread(false)
+      return
+    }
 
-.navbar-center a:hover {
-  color: #0077ff;
-}
+    let isMounted = true
+    let unsubs = []
 
-.navbar-right {
-  display: flex;
-  align-items: center;
-  gap: 15px;
-}
+    const getSeenKey = (uid, tripId) => `cc_seen_${uid}_${tripId}`
+    const getLastSeen = (uid, tripId) => {
+      try {
+        const raw = localStorage.getItem(getSeenKey(uid, tripId))
+        return raw ? Number(raw) : 0
+      } catch {
+        return 0
+      }
+    }
 
-.icon {
-  color: #333;
-  font-size: 1.2rem;
-  transition: color 0.2s ease;
-}
+    async function initUnread() {
+      try {
+        const { getUserTrips, getUserOrders, listenToTripLastMessage } =
+          await import("../../lib/db")
 
-.icon-wrap {
-  position: relative;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-}
+        const postedTrips = await getUserTrips(user.uid)
+        const bookedOrders = await getUserOrders(user.uid)
+        const trips = [...postedTrips, ...bookedOrders].filter(
+          (t) => t.status === "booked"
+        )
 
-.icon-badge {
-  position: absolute;
-  top: -6px;
-  right: -6px;
-  width: 10px;
-  height: 10px;
-  border-radius: 999px;
-  background: #ff3b30;
-  border: 2px solid white;
-}
+        const uniqueTripIds = Array.from(new Set(trips.map((t) => t.id)))
 
-.icon:hover {
-  color: #0077ff;
-}
+        unsubs = uniqueTripIds.map((tripId) =>
+          listenToTripLastMessage(tripId, (msg) => {
+            if (!isMounted) return
+            if (!msg || !msg.sentAt || !msg.senderUid || msg.senderUid === user.uid) return
+            const lastSeen = getLastSeen(user.uid, tripId)
+            const msgTime = new Date(msg.sentAt).getTime()
+            if (msgTime > lastSeen) setHasUnread(true)
+          })
+        )
+      } catch {
+        if (isMounted) setHasUnread(false)
+      }
+    }
 
-.add-trip-btn {
-  background-color: #0077ff;
-  color: white;
-  border: none;
-  padding: 8px 16px;
-  border-radius: 6px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background 0.2s ease;
-}
+    initUnread()
+    return () => {
+      isMounted = false
+      unsubs.forEach((u) => {
+        try {
+          u && u()
+        } catch {}
+      })
+    }
+  }, [user])
 
-.add-trip-btn:hover {
-  background-color: #005fcc;
-}
-
-.cc-logo {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.cc-logoMark {
-  width: 38px;
-  height: 38px;
-  border-radius: 12px;
-  background: linear-gradient(135deg, #0077ff, #7c3aed);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 2px;
-  box-shadow: 0 6px 16px rgba(0, 119, 255, 0.18);
-}
-
-.cc-logoMark img {
-  background: white;
-  border-radius: 10px;
-  padding: 6px;
-}
-
-.cc-brandText {
-  font-size: 1.35rem;
-  font-weight: 800;
-  background: linear-gradient(90deg, #0077ff, #7c3aed);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-}
-
-.cc-btn {
-  border: 0;
-  border-radius: 10px;
-  padding: 8px 14px;
-  font-weight: 700;
-  cursor: pointer;
-  text-decoration: none;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.cc-btnPrimary {
-  background: linear-gradient(90deg, #0077ff, #7c3aed);
-  color: white;
-}
-
-.cc-btnDanger {
-  background: linear-gradient(90deg, #ef4444, #dc2626);
-  color: white;
-}
-
-.cc-iconBtn {
-  width: 40px;
-  height: 40px;
-  border-radius: 10px;
-  transition: background 0.2s ease;
-}
-
-.cc-iconBtn:hover {
-  background: #f3f4f6;
-}
-
-.cc-searchBox {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  background: #f3f4f6;
-  border: 1px solid #e5e7eb;
-  border-radius: 12px;
-  padding: 8px 10px;
-}
-
-.cc-searchIcon {
-  color: #6b7280;
-  font-size: 14px;
-}
-
-.cc-searchInput {
-  width: 220px;
-  border: 0;
-  outline: none;
-  background: transparent;
-  font-size: 14px;
-}
-
-.cc-searchClose {
-  border: 0;
-  background: transparent;
-  cursor: pointer;
-  color: #6b7280;
-}
-
-.cc-mobileToggle {
-  display: none;
-  border: 0;
-  background: transparent;
-  cursor: pointer;
-  font-size: 20px;
-}
-
-.cc-mobileMenu {
-  display: none;
-  background: white;
-  border-bottom: 1px solid #e5e7eb;
-  padding: 12px 18px;
-}
-
-.cc-mobileMenu a {
-  display: block;
-  padding: 10px;
-  border-radius: 10px;
-  text-decoration: none;
-  color: #111827;
-  font-weight: 600;
-}
-
-.cc-mobileMenu a:hover {
-  background: #f3f4f6;
-}
-
-.cc-mobileLogout {
-  width: 100%;
-  margin-top: 8px;
-  background: #fee2e2;
-  color: #b91c1c;
-  border: 0;
-  border-radius: 10px;
-  padding: 10px 12px;
-  font-weight: 800;
-  cursor: pointer;
-}
-
-.cc-mobileAuth {
-  margin-top: 8px;
-  background: linear-gradient(90deg, #0077ff, #7c3aed);
-  color: white;
-  text-align: center;
-}
-
-@media (max-width: 768px) {
-  .navbar-center {
-    display: none;
+  const handleLogout = async () => {
+    try {
+      const { logOut } = await import("../../lib/auth")
+      await logOut()
+      router.push("/")
+    } catch (error) {
+      console.error("Logout error:", error)
+    }
   }
 
-  .cc-mobileToggle {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 40px;
-    height: 40px;
-    border-radius: 10px;
-  }
+  return (
+    <>
+      <nav className="cc-navbar">
+        <div className="cc-navContainer">
+          {/* LEFT - Logo */}
+          <div className="cc-navLeft">
+            <Link href="/" className="cc-logo">
+              <span className="cc-logoMark">
+                <Image src="/favicon.ico" alt="CarryConnect" width={18} height={18} priority />
+              </span>
+              <span className="cc-brandText">CarryConnect</span>
+            </Link>
+          </div>
 
-  .cc-mobileMenu {
-    display: block;
-  }
+          {/* CENTER - Navigation Links */}
+          <div className="cc-navCenter">
+            <Link href="/find-a-carrier" className="cc-navLink">
+              Find a Carrier
+            </Link>
+            <Link href="/add-trip" className="cc-navLink">
+              Add Trip
+            </Link>
 
-  .cc-searchInput {
-    width: 150px;
-  }
+            {user && (
+              <>
+                <Link href="/my-trips" className="cc-navLink">
+                  My Trips
+                </Link>
+                <Link href="/my-orders" className="cc-navLink">
+                  My Orders
+                </Link>
+              </>
+            )}
+          </div>
+
+          {/* RIGHT - Actions */}
+          <div className="cc-navRight">
+            {/* Search */}
+            <div className="cc-searchWrapper">
+              {isSearchOpen ? (
+                <div className="cc-searchExpanded">
+                  <i className="fa-solid fa-magnifying-glass cc-searchIconExpanded"></i>
+                  <input
+                    className="cc-searchInput"
+                    placeholder="Search trips, orders..."
+                    autoFocus
+                    onBlur={() => setTimeout(() => setIsSearchOpen(false), 150)}
+                  />
+                  <button
+                    className="cc-searchCloseBtn"
+                    onClick={() => setIsSearchOpen(false)}
+                    aria-label="Close search"
+                  >
+                    <i className="fa-solid fa-xmark"></i>
+                  </button>
+                </div>
+              ) : (
+                <button
+                  className="cc-navIconBtn"
+                  onClick={() => setIsSearchOpen(true)}
+                  aria-label="Search"
+                  title="Search"
+                >
+                  <i className="fa-solid fa-magnifying-glass"></i>
+                </button>
+              )}
+            </div>
+
+            {user ? (
+              <>
+                {/* Messages */}
+                <Link href="/messages" className="cc-navIconBtn" aria-label="Messages" title="Messages">
+                  <i className="fa-regular fa-comments"></i>
+                  {hasUnread && <span className="cc-notificationDot"></span>}
+                </Link>
+
+                {/* Profile */}
+                <Link href="/profile" className="cc-navIconBtn" aria-label="Profile" title="Profile">
+                  <i className="fa-regular fa-user"></i>
+                </Link>
+
+                {/* Logout Button */}
+                <button onClick={handleLogout} className="cc-navBtn cc-navBtnSecondary">
+                  Logout
+                </button>
+              </>
+            ) : (
+              !loading && (
+                <Link href="/auth" className="cc-navBtn cc-navBtnPrimary">
+                  Sign In
+                </Link>
+              )
+            )}
+
+            {/* Mobile Menu Toggle */}
+            <button
+              className="cc-mobileMenuBtn"
+              onClick={() => setIsMobileMenuOpen((s) => !s)}
+              aria-label="Toggle menu"
+            >
+              <i className={`fa-solid ${isMobileMenuOpen ? "fa-xmark" : "fa-bars"}`}></i>
+            </button>
+          </div>
+        </div>
+      </nav>
+
+      {/* Mobile Menu */}
+      <div className={`cc-mobileMenuOverlay ${isMobileMenuOpen ? "cc-mobileMenuOpen" : ""}`}>
+        <div className="cc-mobileMenuContent">
+          <div className="cc-mobileMenuLinks">
+            <Link href="/find-a-carrier" onClick={() => setIsMobileMenuOpen(false)} className="cc-mobileLink">
+              <i className="fa-solid fa-truck"></i>
+              <span>Find a Carrier</span>
+            </Link>
+            <Link href="/add-trip" onClick={() => setIsMobileMenuOpen(false)} className="cc-mobileLink">
+              <i className="fa-solid fa-plus-circle"></i>
+              <span>Add Trip</span>
+            </Link>
+
+            {user && (
+              <>
+                <Link href="/my-trips" onClick={() => setIsMobileMenuOpen(false)} className="cc-mobileLink">
+                  <i className="fa-solid fa-route"></i>
+                  <span>My Trips</span>
+                </Link>
+                <Link href="/my-orders" onClick={() => setIsMobileMenuOpen(false)} className="cc-mobileLink">
+                  <i className="fa-solid fa-box"></i>
+                  <span>My Orders</span>
+                </Link>
+                <Link href="/messages" onClick={() => setIsMobileMenuOpen(false)} className="cc-mobileLink">
+                  <i className="fa-regular fa-comments"></i>
+                  <span>Messages</span>
+                  {hasUnread && <span className="cc-mobileBadge">•</span>}
+                </Link>
+                <Link href="/profile" onClick={() => setIsMobileMenuOpen(false)} className="cc-mobileLink">
+                  <i className="fa-regular fa-user"></i>
+                  <span>Profile</span>
+                </Link>
+              </>
+            )}
+          </div>
+
+          <div className="cc-mobileMenuFooter">
+            {user ? (
+              <button
+                onClick={() => {
+                  handleLogout()
+                  setIsMobileMenuOpen(false)
+                }}
+                className="cc-mobileActionBtn cc-mobileLogoutBtn"
+              >
+                <i className="fa-solid fa-right-from-bracket"></i>
+                <span>Logout</span>
+              </button>
+            ) : (
+              !loading && (
+                <Link
+                  href="/auth"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="cc-mobileActionBtn cc-mobileAuthBtn"
+                >
+                  <i className="fa-solid fa-arrow-right-to-bracket"></i>
+                  <span>Sign In</span>
+                </Link>
+              )
+            )}
+          </div>
+        </div>
+      </div>
+    </>
+  )
 }
