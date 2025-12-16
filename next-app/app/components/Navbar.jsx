@@ -7,7 +7,7 @@ import { useRouter } from "next/navigation"
 
 export default function Navbar() {
   const router = useRouter()
-  const [user, setUser] = useState<any>(null)
+  const [user, setUser] = useState(null)
   const [loading, setLoading] = useState(true)
   const [hasUnread, setHasUnread] = useState(false)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
@@ -17,7 +17,7 @@ export default function Navbar() {
     async function checkAuth() {
       try {
         const { onAuthChange } = await import("../../lib/auth")
-        const unsubscribe = onAuthChange((currentUser: any) => {
+        const unsubscribe = onAuthChange((currentUser) => {
           setUser(currentUser)
           setLoading(false)
         })
@@ -37,12 +37,12 @@ export default function Navbar() {
     }
 
     let isMounted = true
-    let unsubs: any[] = []
+    let unsubs = []
 
-    const getSeenKey = (uid: string, tripId: string) =>
+    const getSeenKey = (uid, tripId) =>
       `cc_seen_${uid}_${tripId}`
 
-    const getLastSeen = (uid: string, tripId: string) => {
+    const getLastSeen = (uid, tripId) => {
       try {
         const raw = localStorage.getItem(getSeenKey(uid, tripId))
         return raw ? Number(raw) : 0
@@ -68,7 +68,7 @@ export default function Navbar() {
         const uniqueTripIds = Array.from(new Set(trips.map((t) => t.id)))
 
         unsubs = uniqueTripIds.map((tripId) =>
-          listenToTripLastMessage(tripId, (msg: any) => {
+          listenToTripLastMessage(tripId, (msg) => {
             if (!isMounted) return
             if (!msg || !msg.sentAt || msg.senderUid === user.uid) return
             const lastSeen = getLastSeen(user.uid, tripId)
@@ -124,98 +124,50 @@ export default function Navbar() {
             </span>
           </Link>
 
-          {/* DESKTOP LINKS */}
+          {/* LINKS */}
           <div className="hidden lg:flex items-center gap-1">
-            <Link
-              href="/find-a-carrier"
-              className="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 hover:text-blue-600 rounded-lg transition"
-            >
-              Find a Carrier
-            </Link>
-            <Link
-              href="/add-trip"
-              className="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 hover:text-blue-600 rounded-lg transition"
-            >
-              Add Trip
-            </Link>
-
+            <Link href="/find-a-carrier" className="nav-link">Find a Carrier</Link>
+            <Link href="/add-trip" className="nav-link">Add Trip</Link>
             {user && (
               <>
-                <Link
-                  href="/my-trips"
-                  className="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 hover:text-blue-600 rounded-lg transition"
-                >
-                  My Trips
-                </Link>
-                <Link
-                  href="/my-orders"
-                  className="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 hover:text-blue-600 rounded-lg transition"
-                >
-                  My Orders
-                </Link>
+                <Link href="/my-trips" className="nav-link">My Trips</Link>
+                <Link href="/my-orders" className="nav-link">My Orders</Link>
               </>
             )}
           </div>
 
           {/* ACTIONS */}
           <div className="hidden md:flex items-center gap-2">
-            <button
-              onClick={() => setIsSearchOpen(!isSearchOpen)}
-              className="p-2.5 text-gray-600 hover:bg-gray-100 rounded-lg transition"
-            >
+            <button className="icon-btn">
               <i className="fa-solid fa-search"></i>
             </button>
 
             {user && (
-              <Link
-                href="/messages"
-                className="relative p-2.5 text-gray-600 hover:bg-gray-100 rounded-lg transition"
-              >
+              <Link href="/messages" className="icon-btn relative">
                 <i className="fa-regular fa-comments"></i>
                 {hasUnread && (
-                  <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full ring-2 ring-white"></span>
+                  <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
                 )}
               </Link>
             )}
 
             {user ? (
               <>
-                <Link
-                  href="/profile"
-                  className="p-2.5 text-gray-600 hover:bg-gray-100 rounded-lg transition"
-                >
+                <Link href="/profile" className="icon-btn">
                   <i className="fa-regular fa-user"></i>
                 </Link>
-                <button
-                  onClick={handleLogout}
-                  className="ml-2 px-4 py-2 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white text-sm font-semibold rounded-lg transition"
-                >
+                <button onClick={handleLogout} className="logout-btn">
                   Logout
                 </button>
               </>
             ) : (
               !loading && (
-                <Link
-                  href="/auth"
-                  className="px-5 py-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white text-sm font-semibold rounded-lg transition"
-                >
+                <Link href="/auth" className="login-btn">
                   Login / Sign Up
                 </Link>
               )
             )}
           </div>
-
-          {/* MOBILE TOGGLE */}
-          <button
-            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            className="md:hidden p-2 text-gray-600 hover:bg-gray-100 rounded-lg"
-          >
-            <i
-              className={`fa-solid ${
-                isMobileMenuOpen ? "fa-xmark" : "fa-bars"
-              } text-xl`}
-            ></i>
-          </button>
         </div>
       </div>
     </nav>
