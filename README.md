@@ -29,41 +29,41 @@ CarryConnect is a web application designed to connect travelers with individuals
 ### Installation
 
 1.  Clone the repository:
-    ```bash
-    git clone https://github.com/its-nadir/Carry-Connect.git
-    cd Carry-Connect
-    ```
+   ```bash
+   git clone https://github.com/its-nadir/Carry-Connect.git
+   cd Carry-Connect
+   ```
 
 2.  Install dependencies:
-    ```bash
-    cd next-app
-    npm install
-    ```
+   ```bash
+   cd next-app
+   npm install
+   ```
 
 ### Configuration
 
 1.  **Firebase Setup**:
-    *   Create a project in the [Firebase Console](https://console.firebase.google.com/).
-    *   Register a web app to obtain your configuration keys.
-    *   Enable **Authentication** (Email/Password, Google).
-    *   Create a **Firestore Database** (Production mode, recommended region: `europe-west10`).
+   *   Create a project in the [Firebase Console](https://console.firebase.google.com/).
+   *   Register a web app to obtain your configuration keys.
+   *   Enable **Authentication** (Email/Password, Google).
+   *   Create a **Firestore Database** (Production mode, recommended region: `europe-west10`).
 
 2.  **Environment Variables**:
-    Create a `.env.local` file in the `next-app` directory and populate it with your Firebase credentials:
+   Create a `.env.local` file in the `next-app` directory and populate it with your Firebase credentials:
 
-    ```env
-    NEXT_PUBLIC_FIREBASE_API_KEY=your_api_key
-    NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=your_project_id.firebaseapp.com
-    NEXT_PUBLIC_FIREBASE_PROJECT_ID=your_project_id
-    NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=your_project_id.firebasestorage.app
-    NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=your_sender_id
-    NEXT_PUBLIC_FIREBASE_APP_ID=your_app_id
-    ```
+   ```env
+   NEXT_PUBLIC_FIREBASE_API_KEY=your_api_key
+   NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=your_project_id.firebaseapp.com
+   NEXT_PUBLIC_FIREBASE_PROJECT_ID=your_project_id
+   NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=your_project_id.firebasestorage.app
+   NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=your_sender_id
+   NEXT_PUBLIC_FIREBASE_APP_ID=your_app_id
+   ```
 
 3.  **Deploy Security Rules**:
-    ```bash
-    firebase deploy --only firestore:rules
-    ```
+   ```bash
+   firebase deploy --only firestore:rules
+   ```
 
 ### Running the Application
 
@@ -107,13 +107,8 @@ This repository includes a GitHub Actions workflow for continuous deployment. To
 
 ```
 Carry-Connect/
-├── next-app/               # Main Next.js application source
-│   ├── app/                # App Router: pages, layouts, and components
-│   ├── lib/                # Shared libraries and Firebase configuration
-│   └── public/             # Static assets
-├── db/                     # Database configuration and rules
-├── .github/                # GitHub Actions workflows
-└── scripts/                # Utility scripts
+         db/                     # Database configuration and rules
+scripts/                # Utility scripts
 ```
 
 
