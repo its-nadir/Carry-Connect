@@ -7,7 +7,7 @@ import { useRouter } from "next/navigation"
 
 export default function Navbar() {
   const router = useRouter()
-  const [user, setUser] = useState(null)
+  const [user, setUser] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [hasUnread, setHasUnread] = useState(false)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
@@ -17,12 +17,13 @@ export default function Navbar() {
     async function checkAuth() {
       try {
         const { onAuthChange } = await import("../../lib/auth")
-        const unsubscribe = onAuthChange((currentUser) => {
+        const unsubscribe = onAuthChange((currentUser: any) => {
           setUser(currentUser)
           setLoading(false)
         })
         return () => unsubscribe()
-      } catch {
+      } catch (error) {
+        console.error("Auth error:", error)
         setLoading(false)
       }
     }
@@ -35,7 +36,7 @@ export default function Navbar() {
       return
     }
 
-    let mounted = true
+    let isMounted = true
     let unsubs: any[] = []
 
     const getSeenKey = (uid: string, tripId: string) =>
@@ -67,42 +68,54 @@ export default function Navbar() {
         const uniqueTripIds = Array.from(new Set(trips.map((t) => t.id)))
 
         unsubs = uniqueTripIds.map((tripId) =>
-          listenToTripLastMessage(tripId, (msg) => {
-            if (!mounted || !msg || msg.senderUid === user.uid) return
+          listenToTripLastMessage(tripId, (msg: any) => {
+            if (!isMounted) return
+            if (!msg || !msg.sentAt || msg.senderUid === user.uid) return
             const lastSeen = getLastSeen(user.uid, tripId)
             const msgTime = new Date(msg.sentAt).getTime()
             if (msgTime > lastSeen) setHasUnread(true)
           })
         )
-      } catch {}
+      } catch {
+        if (isMounted) setHasUnread(false)
+      }
     }
 
     initUnread()
     return () => {
-      mounted = false
-      unsubs.forEach((u) => u && u())
+      isMounted = false
+      unsubs.forEach((u) => {
+        try {
+          u && u()
+        } catch {}
+      })
     }
   }, [user])
 
   const handleLogout = async () => {
-    const { logOut } = await import("../../lib/auth")
-    await logOut()
-    router.push("/")
+    try {
+      const { logOut } = await import("../../lib/auth")
+      await logOut()
+      router.push("/")
+    } catch (error) {
+      console.error("Logout error:", error)
+    }
   }
 
   return (
-    <nav className="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-gray-200">
-      <div className="max-w-7xl mx-auto px-4">
-        <div className="flex h-16 items-center justify-between">
-          {/* Logo */}
-          <Link href="/" className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-600 to-purple-600 p-[2px]">
+    <nav className="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-gray-200">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex items-center justify-between h-16">
+          {/* LOGO */}
+          <Link href="/" className="flex items-center gap-3 group">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-600 to-purple-600 p-[2px] shadow-md group-hover:shadow-lg transition-all duration-200 group-hover:scale-105">
               <div className="w-full h-full bg-white rounded-xl flex items-center justify-center">
                 <Image
-                  src="/logo.png"
+                  src="/favicon.ico"
                   alt="CarryConnect"
                   width={20}
                   height={20}
+                  priority
                 />
               </div>
             </div>
@@ -111,31 +124,44 @@ export default function Navbar() {
             </span>
           </Link>
 
-          {/* Desktop Nav */}
+          {/* DESKTOP LINKS */}
           <div className="hidden lg:flex items-center gap-1">
-            {[
-              ["Find a Carrier", "/find-a-carrier"],
-              ["Add Trip", "/add-trip"],
-              user && ["My Trips", "/my-trips"],
-              user && ["My Orders", "/my-orders"],
-            ]
-              .filter(Boolean)
-              .map(([label, href]) => (
+            <Link
+              href="/find-a-carrier"
+              className="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 hover:text-blue-600 rounded-lg transition"
+            >
+              Find a Carrier
+            </Link>
+            <Link
+              href="/add-trip"
+              className="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 hover:text-blue-600 rounded-lg transition"
+            >
+              Add Trip
+            </Link>
+
+            {user && (
+              <>
                 <Link
-                  key={href}
-                  href={href}
-                  className="px-4 py-2 text-sm font-medium text-gray-700 rounded-lg hover:bg-gray-100 hover:text-blue-600 transition"
+                  href="/my-trips"
+                  className="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 hover:text-blue-600 rounded-lg transition"
                 >
-                  {label}
+                  My Trips
                 </Link>
-              ))}
+                <Link
+                  href="/my-orders"
+                  className="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 hover:text-blue-600 rounded-lg transition"
+                >
+                  My Orders
+                </Link>
+              </>
+            )}
           </div>
 
-          {/* Actions */}
+          {/* ACTIONS */}
           <div className="hidden md:flex items-center gap-2">
             <button
               onClick={() => setIsSearchOpen(!isSearchOpen)}
-              className="p-2 rounded-lg hover:bg-gray-100 text-gray-600"
+              className="p-2.5 text-gray-600 hover:bg-gray-100 rounded-lg transition"
             >
               <i className="fa-solid fa-search"></i>
             </button>
@@ -143,11 +169,11 @@ export default function Navbar() {
             {user && (
               <Link
                 href="/messages"
-                className="relative p-2 rounded-lg hover:bg-gray-100 text-gray-600"
+                className="relative p-2.5 text-gray-600 hover:bg-gray-100 rounded-lg transition"
               >
                 <i className="fa-regular fa-comments"></i>
                 {hasUnread && (
-                  <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
+                  <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full ring-2 ring-white"></span>
                 )}
               </Link>
             )}
@@ -156,13 +182,13 @@ export default function Navbar() {
               <>
                 <Link
                   href="/profile"
-                  className="p-2 rounded-lg hover:bg-gray-100 text-gray-600"
+                  className="p-2.5 text-gray-600 hover:bg-gray-100 rounded-lg transition"
                 >
                   <i className="fa-regular fa-user"></i>
                 </Link>
                 <button
                   onClick={handleLogout}
-                  className="ml-2 px-4 py-2 text-sm font-semibold text-white rounded-lg bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700"
+                  className="ml-2 px-4 py-2 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white text-sm font-semibold rounded-lg transition"
                 >
                   Logout
                 </button>
@@ -171,7 +197,7 @@ export default function Navbar() {
               !loading && (
                 <Link
                   href="/auth"
-                  className="px-5 py-2 rounded-lg text-sm font-semibold text-white bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+                  className="px-5 py-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white text-sm font-semibold rounded-lg transition"
                 >
                   Login / Sign Up
                 </Link>
@@ -179,15 +205,15 @@ export default function Navbar() {
             )}
           </div>
 
-          {/* Mobile Toggle */}
+          {/* MOBILE TOGGLE */}
           <button
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            className="md:hidden p-2 rounded-lg hover:bg-gray-100"
+            className="md:hidden p-2 text-gray-600 hover:bg-gray-100 rounded-lg"
           >
             <i
               className={`fa-solid ${
                 isMobileMenuOpen ? "fa-xmark" : "fa-bars"
-              } text-lg`}
+              } text-xl`}
             ></i>
           </button>
         </div>
