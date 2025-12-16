@@ -100,7 +100,7 @@ export default function Navbar() {
   return (
     <>
       <nav className="navbar">
-        {/* LEFT */}
+        {/* LEFT - Logo */}
         <div className="navbar-left">
           <Link href="/" className="logo cc-logo">
             <span className="cc-logoMark">
@@ -110,20 +110,20 @@ export default function Navbar() {
           </Link>
         </div>
 
-        {/* CENTER (desktop) */}
+        {/* CENTER - Navigation Links (desktop) */}
         <div className="navbar-center">
-          <Link href="/find-a-carrier">Find a Carrier</Link>
-          <Link href="/add-trip">Add Trip</Link>
+          <Link href="/find-a-carrier" className="nav-link">Find a Carrier</Link>
+          <Link href="/add-trip" className="nav-link">Add Trip</Link>
 
           {user && (
             <>
-              <Link href="/my-trips">My Trips</Link>
-              <Link href="/my-orders">My Orders</Link>
+              <Link href="/my-trips" className="nav-link">My Trips</Link>
+              <Link href="/my-orders" className="nav-link">My Orders</Link>
             </>
           )}
         </div>
 
-        {/* RIGHT */}
+        {/* RIGHT - Actions & User Menu */}
         <div className="navbar-right">
           {/* Search */}
           <div className="cc-search">
@@ -163,13 +163,20 @@ export default function Navbar() {
                 {hasUnread && <span className="icon-badge"></span>}
               </Link>
 
-              {/* Profile */}
-              <Link href="/profile" className="icon-wrap cc-iconBtn" aria-label="Profile">
-                <i className="fa-regular fa-user icon"></i>
+              {/* Notifications */}
+              <button className="icon-wrap cc-iconBtn" aria-label="Notifications">
+                <i className="fa-regular fa-bell icon"></i>
+              </button>
+
+              {/* Profile Avatar */}
+              <Link href="/profile" className="profile-avatar" aria-label="Profile">
+                <div className="avatar-placeholder">
+                  <i className="fa-solid fa-user"></i>
+                </div>
               </Link>
 
               {/* Logout */}
-              <button onClick={handleLogout} className="cc-btn cc-btnDanger">
+              <button onClick={handleLogout} className="cc-btn cc-btnSecondary">
                 Logout
               </button>
             </>
@@ -195,25 +202,25 @@ export default function Navbar() {
       {/* Mobile Menu */}
       {isMobileMenuOpen && (
         <div className="cc-mobileMenu">
-          <Link href="/find-a-carrier" onClick={() => setIsMobileMenuOpen(false)}>
+          <Link href="/find-a-carrier" onClick={() => setIsMobileMenuOpen(false)} className="mobile-nav-link">
             Find a Carrier
           </Link>
-          <Link href="/add-trip" onClick={() => setIsMobileMenuOpen(false)}>
+          <Link href="/add-trip" onClick={() => setIsMobileMenuOpen(false)} className="mobile-nav-link">
             Add Trip
           </Link>
 
           {user && (
             <>
-              <Link href="/my-trips" onClick={() => setIsMobileMenuOpen(false)}>
+              <Link href="/my-trips" onClick={() => setIsMobileMenuOpen(false)} className="mobile-nav-link">
                 My Trips
               </Link>
-              <Link href="/my-orders" onClick={() => setIsMobileMenuOpen(false)}>
+              <Link href="/my-orders" onClick={() => setIsMobileMenuOpen(false)} className="mobile-nav-link">
                 My Orders
               </Link>
-              <Link href="/messages" onClick={() => setIsMobileMenuOpen(false)}>
+              <Link href="/messages" onClick={() => setIsMobileMenuOpen(false)} className="mobile-nav-link">
                 Messages {hasUnread ? "•" : ""}
               </Link>
-              <Link href="/profile" onClick={() => setIsMobileMenuOpen(false)}>
+              <Link href="/profile" onClick={() => setIsMobileMenuOpen(false)} className="mobile-nav-link">
                 Profile
               </Link>
               <button
