@@ -54,6 +54,24 @@ body {
   transition: color 0.2s ease;
 }
 
+.icon-wrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.icon-badge {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  background: #ff3b30;
+  border: 2px solid white;
+}
+
 .icon:hover {
   color: #0077ff;
 }
