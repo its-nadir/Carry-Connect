@@ -11,7 +11,6 @@ export default function Navbar() {
   const [loading, setLoading] = useState(true)
   const [hasUnread, setHasUnread] = useState(false)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
-  const [isSearchOpen, setIsSearchOpen] = useState(false)
 
   useEffect(() => {
     async function checkAuth() {
@@ -110,24 +109,6 @@ export default function Navbar() {
         </div>
 
         <div className="navbar-right">
-          {isSearchOpen ? (
-            <div className="cc-searchBox">
-              <input
-                className="cc-searchInput"
-                placeholder="Search..."
-                autoFocus
-                onBlur={() => setIsSearchOpen(false)}
-              />
-            </div>
-          ) : (
-            <button
-              className="icon-wrap cc-iconBtn"
-              onClick={() => setIsSearchOpen(true)}
-            >
-              <i className="fa-solid fa-magnifying-glass icon"></i>
-            </button>
-          )}
-
           {user ? (
             <>
               <Link href="/messages" className="icon-wrap cc-iconBtn">
@@ -139,13 +120,13 @@ export default function Navbar() {
                 <i className="fa-regular fa-user icon"></i>
               </Link>
 
-              <button onClick={handleLogout} className="cc-btn cc-btnDanger">
+              <button onClick={handleLogout} className="add-trip-btn" style={{background: '#ef4444'}}>
                 Logout
               </button>
             </>
           ) : (
             !loading && (
-              <Link href="/auth" className="cc-btn cc-btnPrimary">
+              <Link href="/auth" className="add-trip-btn">
                 Login / Sign Up
               </Link>
             )
