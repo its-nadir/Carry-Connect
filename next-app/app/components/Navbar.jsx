@@ -20,6 +20,7 @@ export default function Navbar() {
         });
         return () => unsubscribe();
       } catch (error) {
+        console.error("Auth error:", error);
         setLoading(false);
       }
     }
@@ -53,15 +54,13 @@ export default function Navbar() {
         const trips = [...postedTrips, ...bookedOrders].filter((t) => t.status === "booked");
         const uniqueTripIds = Array.from(new Set(trips.map((t) => t.id)));
 
-        unsubs = uniqueTripIds.map((tripId) =>
-          listenToTripLastMessage(tripId, (msg) => {
-            if (!isMounted) return;
-            if (!msg || !msg.sentAt || !msg.senderUid || msg.senderUid === user.uid) return;
-            const lastSeen = getLastSeen(user.uid, tripId);
-            const msgTime = new Date(msg.sentAt).getTime();
-            if (msgTime > lastSeen) setHasUnread(true);
-          })
-        );
+        unsubs = uniqueTripIds.map((tripId) => listenToTripLastMessage(tripId, (msg) => {
+          if (!isMounted) return;
+          if (!msg || !msg.sentAt || !msg.senderUid || msg.senderUid === user.uid) return;
+          const lastSeen = getLastSeen(user.uid, tripId);
+          const msgTime = new Date(msg.sentAt).getTime();
+          if (msgTime > lastSeen) setHasUnread(true);
+        }));
       } catch {
         if (isMounted) setHasUnread(false);
       }
@@ -71,9 +70,7 @@ export default function Navbar() {
     return () => {
       isMounted = false;
       unsubs.forEach((u) => {
-        try {
-          u && u();
-        } catch {}
+        try { u && u(); } catch {}
       });
     };
   }, [user]);
@@ -92,10 +89,14 @@ export default function Navbar() {
     <nav className="navbar">
       {/* LEFT SIDE */}
       <div className="navbar-left">
-        <div className="logo-container">
-          <img className="logo" src="/path-to-logo.png" alt="CarryConnect Logo" />
-          <Link href="/" className="logo-text">CarryConnect</Link>
-        </div>
+        <i
+          className="fa-regular fa-globe"
+          style={{ color: "#0077ff", fontSize: "1.6rem" }}
+        ></i>
+
+        <Link href="/" className="logo">
+          CarryConnect
+        </Link>
       </div>
 
       {/* CENTER LINKS */}
@@ -125,14 +126,27 @@ export default function Navbar() {
               <i className="fa-regular fa-user"></i>
             </Link>
 
-            <button onClick={handleLogout} className="logout-btn">
+            <button
+              onClick={handleLogout}
+              className="logout-btn"
+              style={{
+                background: '#f44336',
+                color: 'white',
+                border: 'none',
+                padding: '8px 16px',
+                borderRadius: '8px',
+                cursor: 'pointer',
+                fontWeight: '600',
+                fontSize: '14px'
+              }}
+            >
               Logout
             </button>
           </>
         ) : (
           <>
             {!loading && (
-              <Link href="/auth" className="login-btn">
+              <Link href="/auth" className="add-trip-btn">
                 Login / Sign Up
               </Link>
             )}
