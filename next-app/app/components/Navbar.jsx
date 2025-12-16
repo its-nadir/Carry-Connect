@@ -10,7 +10,6 @@ export default function Navbar() {
   const [user, setUser] = useState(null)
   const [loading, setLoading] = useState(true)
   const [hasUnread, setHasUnread] = useState(false)
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
 
   useEffect(() => {
     async function checkAuth() {
@@ -132,37 +131,8 @@ export default function Navbar() {
             )
           )}
 
-          <button
-            className="cc-mobileToggle"
-            onClick={() => setIsMobileMenuOpen((v) => !v)}
-          >
-            <i className={`fa-solid ${isMobileMenuOpen ? "fa-xmark" : "fa-bars"}`}></i>
-          </button>
         </div>
       </nav>
-
-      {isMobileMenuOpen && (
-        <div className="cc-mobileMenu">
-          <Link href="/find-a-carrier">Find a Carrier</Link>
-          <Link href="/add-trip">Add Trip</Link>
-          {user && (
-            <>
-              <Link href="/my-trips">My Trips</Link>
-              <Link href="/my-orders">My Orders</Link>
-              <Link href="/messages">Messages</Link>
-              <Link href="/profile">Profile</Link>
-              <button onClick={handleLogout} className="cc-mobileLogout">
-                Logout
-              </button>
-            </>
-          )}
-          {!user && !loading && (
-            <Link href="/auth" className="cc-mobileAuth">
-              Login / Sign Up
-            </Link>
-          )}
-        </div>
-      )}
     </>
   )
 }
