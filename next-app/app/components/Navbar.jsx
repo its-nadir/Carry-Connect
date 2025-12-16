@@ -39,9 +39,7 @@ export default function Navbar() {
     let isMounted = true
     let unsubs = []
 
-    const getSeenKey = (uid, tripId) =>
-      `cc_seen_${uid}_${tripId}`
-
+    const getSeenKey = (uid, tripId) => `cc_seen_${uid}_${tripId}`
     const getLastSeen = (uid, tripId) => {
       try {
         const raw = localStorage.getItem(getSeenKey(uid, tripId))
@@ -53,11 +51,8 @@ export default function Navbar() {
 
     async function initUnread() {
       try {
-        const {
-          getUserTrips,
-          getUserOrders,
-          listenToTripLastMessage,
-        } = await import("../../lib/db")
+        const { getUserTrips, getUserOrders, listenToTripLastMessage } =
+          await import("../../lib/db")
 
         const postedTrips = await getUserTrips(user.uid)
         const bookedOrders = await getUserOrders(user.uid)
@@ -70,7 +65,7 @@ export default function Navbar() {
         unsubs = uniqueTripIds.map((tripId) =>
           listenToTripLastMessage(tripId, (msg) => {
             if (!isMounted) return
-            if (!msg || !msg.sentAt || msg.senderUid === user.uid) return
+            if (!msg || !msg.sentAt || !msg.senderUid || msg.senderUid === user.uid) return
             const lastSeen = getLastSeen(user.uid, tripId)
             const msgTime = new Date(msg.sentAt).getTime()
             if (msgTime > lastSeen) setHasUnread(true)
@@ -103,73 +98,143 @@ export default function Navbar() {
   }
 
   return (
-    <nav className="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-gray-200">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
-          {/* LOGO */}
-          <Link href="/" className="flex items-center gap-3 group">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-600 to-purple-600 p-[2px] shadow-md group-hover:shadow-lg transition-all duration-200 group-hover:scale-105">
-              <div className="w-full h-full bg-white rounded-xl flex items-center justify-center">
-                <Image
-                  src="/favicon.ico"
-                  alt="CarryConnect"
-                  width={20}
-                  height={20}
-                  priority
-                />
-              </div>
-            </div>
-            <span className="text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-              CarryConnect
+    <>
+      <nav className="navbar">
+        {/* LEFT */}
+        <div className="navbar-left">
+          <Link href="/" className="logo cc-logo">
+            <span className="cc-logoMark">
+              <Image src="/favicon.ico" alt="CarryConnect" width={18} height={18} priority />
             </span>
+            <span className="cc-brandText">CarryConnect</span>
+          </Link>
+        </div>
+
+        {/* CENTER (desktop) */}
+        <div className="navbar-center">
+          <Link href="/find-a-carrier">Find a Carrier</Link>
+          <Link href="/add-trip">Add Trip</Link>
+
+          {user && (
+            <>
+              <Link href="/my-trips">My Trips</Link>
+              <Link href="/my-orders">My Orders</Link>
+            </>
+          )}
+        </div>
+
+        {/* RIGHT */}
+        <div className="navbar-right">
+          {/* Search */}
+          <div className="cc-search">
+            {isSearchOpen ? (
+              <div className="cc-searchBox">
+                <i className="fa-solid fa-magnifying-glass cc-searchIcon"></i>
+                <input
+                  className="cc-searchInput"
+                  placeholder="Search..."
+                  autoFocus
+                  onBlur={() => setTimeout(() => setIsSearchOpen(false), 150)}
+                />
+                <button
+                  className="cc-searchClose"
+                  onClick={() => setIsSearchOpen(false)}
+                  aria-label="Close search"
+                >
+                  <i className="fa-solid fa-xmark"></i>
+                </button>
+              </div>
+            ) : (
+              <button
+                className="icon-wrap cc-iconBtn"
+                onClick={() => setIsSearchOpen(true)}
+                aria-label="Search"
+              >
+                <i className="fa-solid fa-magnifying-glass icon"></i>
+              </button>
+            )}
+          </div>
+
+          {user ? (
+            <>
+              {/* Messages */}
+              <Link href="/messages" className="icon-wrap cc-iconBtn" aria-label="Messages">
+                <i className="fa-regular fa-comments icon"></i>
+                {hasUnread && <span className="icon-badge"></span>}
+              </Link>
+
+              {/* Profile */}
+              <Link href="/profile" className="icon-wrap cc-iconBtn" aria-label="Profile">
+                <i className="fa-regular fa-user icon"></i>
+              </Link>
+
+              {/* Logout */}
+              <button onClick={handleLogout} className="cc-btn cc-btnDanger">
+                Logout
+              </button>
+            </>
+          ) : (
+            !loading && (
+              <Link href="/auth" className="cc-btn cc-btnPrimary">
+                Login / Sign Up
+              </Link>
+            )
+          )}
+
+          {/* Mobile Toggle */}
+          <button
+            className="cc-mobileToggle"
+            onClick={() => setIsMobileMenuOpen((s) => !s)}
+            aria-label="Toggle menu"
+          >
+            <i className={`fa-solid ${isMobileMenuOpen ? "fa-xmark" : "fa-bars"}`}></i>
+          </button>
+        </div>
+      </nav>
+
+      {/* Mobile Menu */}
+      {isMobileMenuOpen && (
+        <div className="cc-mobileMenu">
+          <Link href="/find-a-carrier" onClick={() => setIsMobileMenuOpen(false)}>
+            Find a Carrier
+          </Link>
+          <Link href="/add-trip" onClick={() => setIsMobileMenuOpen(false)}>
+            Add Trip
           </Link>
 
-          {/* LINKS */}
-          <div className="hidden lg:flex items-center gap-1">
-            <Link href="/find-a-carrier" className="nav-link">Find a Carrier</Link>
-            <Link href="/add-trip" className="nav-link">Add Trip</Link>
-            {user && (
-              <>
-                <Link href="/my-trips" className="nav-link">My Trips</Link>
-                <Link href="/my-orders" className="nav-link">My Orders</Link>
-              </>
-            )}
-          </div>
-
-          {/* ACTIONS */}
-          <div className="hidden md:flex items-center gap-2">
-            <button className="icon-btn">
-              <i className="fa-solid fa-search"></i>
-            </button>
-
-            {user && (
-              <Link href="/messages" className="icon-btn relative">
-                <i className="fa-regular fa-comments"></i>
-                {hasUnread && (
-                  <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
-                )}
+          {user && (
+            <>
+              <Link href="/my-trips" onClick={() => setIsMobileMenuOpen(false)}>
+                My Trips
               </Link>
-            )}
+              <Link href="/my-orders" onClick={() => setIsMobileMenuOpen(false)}>
+                My Orders
+              </Link>
+              <Link href="/messages" onClick={() => setIsMobileMenuOpen(false)}>
+                Messages {hasUnread ? "•" : ""}
+              </Link>
+              <Link href="/profile" onClick={() => setIsMobileMenuOpen(false)}>
+                Profile
+              </Link>
+              <button
+                onClick={() => {
+                  handleLogout()
+                  setIsMobileMenuOpen(false)
+                }}
+                className="cc-mobileLogout"
+              >
+                Logout
+              </button>
+            </>
+          )}
 
-            {user ? (
-              <>
-                <Link href="/profile" className="icon-btn">
-                  <i className="fa-regular fa-user"></i>
-                </Link>
-                <button onClick={handleLogout} className="logout-btn">
-                  Logout
-                </button>
-              </>
-            ) : (
-              !loading && (
-                <Link href="/auth" className="login-btn">
-                  Login / Sign Up
-                </Link>
-              )
-            )}
-          </div>
+          {!user && !loading && (
+            <Link href="/auth" onClick={() => setIsMobileMenuOpen(false)} className="cc-mobileAuth">
+              Login / Sign Up
+            </Link>
+          )}
         </div>
-      </div>
-    </nav>
+      )}
+    </>
   )
 }
