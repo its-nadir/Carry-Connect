@@ -8,6 +8,7 @@ export default function Navbar() {
   const router = useRouter();
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [hasUnread, setHasUnread] = useState(false);
 
   useEffect(() => {
     async function checkAuth() {
@@ -25,6 +26,54 @@ export default function Navbar() {
     }
     checkAuth();
   }, []);
+
+  useEffect(() => {
+    if (!user) {
+      setHasUnread(false);
+      return;
+    }
+
+    let isMounted = true;
+    let unsubs = [];
+
+    const getSeenKey = (uid, tripId) => `cc_seen_${uid}_${tripId}`;
+    const getLastSeen = (uid, tripId) => {
+      try {
+        const raw = localStorage.getItem(getSeenKey(uid, tripId));
+        return raw ? Number(raw) : 0;
+      } catch {
+        return 0;
+      }
+    };
+
+    async function initUnread() {
+      try {
+        const { getUserTrips, getUserOrders, listenToTripLastMessage } = await import("../../lib/db");
+        const postedTrips = await getUserTrips(user.uid);
+        const bookedOrders = await getUserOrders(user.uid);
+        const trips = [...postedTrips, ...bookedOrders].filter((t) => t.status === "booked");
+        const uniqueTripIds = Array.from(new Set(trips.map((t) => t.id)));
+
+        unsubs = uniqueTripIds.map((tripId) => listenToTripLastMessage(tripId, (msg) => {
+          if (!isMounted) return;
+          if (!msg || !msg.sentAt || !msg.senderUid || msg.senderUid === user.uid) return;
+          const lastSeen = getLastSeen(user.uid, tripId);
+          const msgTime = new Date(msg.sentAt).getTime();
+          if (msgTime > lastSeen) setHasUnread(true);
+        }));
+      } catch {
+        if (isMounted) setHasUnread(false);
+      }
+    }
+
+    initUnread();
+    return () => {
+      isMounted = false;
+      unsubs.forEach((u) => {
+        try { u && u(); } catch {}
+      });
+    };
+  }, [user]);
 
   const handleLogout = async () => {
     try {
@@ -67,7 +116,10 @@ export default function Navbar() {
         {user ? (
           <>
             <Link href="/messages" className="icon">
-              <i className="fa-regular fa-comments"></i>
+              <span className="icon-wrap">
+                <i className="fa-regular fa-comments"></i>
+                {hasUnread && <span className="icon-badge" />}
+              </span>
             </Link>
 
             <Link href="/profile" className="icon">
