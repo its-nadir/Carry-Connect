@@ -14,6 +14,7 @@ export default function MyOrdersPage() {
     useEffect(() => {
         let unsubOrders;
         let unsubRequests;
+        let loadingTimeout;
 
         async function init() {
             try {
@@ -34,8 +35,10 @@ export default function MyOrdersPage() {
                     // Listen to sent booking requests
                     unsubRequests = listenToMySentRequests((requests) => {
                         setSentRequests(requests);
-                        setLoading(false);
                     });
+
+                    // Set loading to false after both listeners are set up
+                    setLoading(false);
                 });
             } catch (error) {
                 console.error("Error initializing orders:", error);
@@ -44,9 +47,11 @@ export default function MyOrdersPage() {
         }
 
         init();
+        
         return () => {
             if (unsubOrders) unsubOrders();
             if (unsubRequests) unsubRequests();
+            if (loadingTimeout) clearTimeout(loadingTimeout);
         };
     }, [router]);
 
