@@ -151,23 +151,58 @@ export default function MyTripsPage() {
       {/* BOOKING REQUESTS */}
       {bookingRequests.length > 0 && (
         <div className={styles.requestsSection}>
-          <h2 className={styles.subtitle}>Booking Requests</h2>
-          {bookingRequests.map(req => (
-            <div key={req.id} className={styles.requestCard}>
-              <p><strong>From:</strong> {req.shipperName}</p>
-              <p><strong>Pickup:</strong> {req.pickupLocation}</p>
-              <p><strong>Dropoff:</strong> {req.dropoffLocation}</p>
-              <p><strong>Offer:</strong> ${req.reward}</p>
-              <div className={styles.requestActions}>
-                <button onClick={() => handleAcceptRequest(req.id)} className={styles.acceptBtn}>
-                  Accept
-                </button>
-                <button onClick={() => handleRejectRequest(req.id)} className={styles.rejectBtn}>
-                  Reject
-                </button>
+          <h2 className={styles.subtitle}>Pending Booking Requests ({bookingRequests.length})</h2>
+          <div className={styles.requestsGrid}>
+            {bookingRequests.map(req => (
+              <div key={req.id} className={styles.requestCard}>
+                <div className={styles.requestCardHeader}>
+                  <h3 className={styles.shipperName}>{req.shipperName}</h3>
+                  <span className={styles.requestReward}>${req.reward}</span>
+                </div>
+
+                <div className={styles.requestCardBody}>
+                  <div className={styles.requestItem}>
+                    <i className="fa-solid fa-location-dot"></i>
+                    <div>
+                      <p className={styles.requestLabel}>Pickup</p>
+                      <p className={styles.requestValue}>{req.pickupLocation}</p>
+                    </div>
+                  </div>
+
+                  <div className={styles.requestItem}>
+                    <i className="fa-solid fa-location-dot"></i>
+                    <div>
+                      <p className={styles.requestLabel}>Dropoff</p>
+                      <p className={styles.requestValue}>{req.dropoffLocation}</p>
+                    </div>
+                  </div>
+
+                  <div className={styles.requestItem}>
+                    <i className="fa-solid fa-box"></i>
+                    <div>
+                      <p className={styles.requestLabel}>Weight</p>
+                      <p className={styles.requestValue}>{req.weight} kg</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className={styles.requestActions}>
+                  <button 
+                    onClick={() => handleAcceptRequest(req.id)} 
+                    className={styles.acceptBtn}
+                  >
+                    <i className="fa-solid fa-check"></i> Accept
+                  </button>
+                  <button 
+                    onClick={() => handleRejectRequest(req.id)} 
+                    className={styles.rejectBtn}
+                  >
+                    <i className="fa-solid fa-times"></i> Reject
+                  </button>
+                </div>
               </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
       )}
 
@@ -181,55 +216,58 @@ export default function MyTripsPage() {
           </Link>
         </div>
       ) : (
-        <div className={styles.grid}>
-          {trips.map((trip) => (
-            <div key={trip.id} className={styles.card}>
-              <div className={styles.cardHeader}>
-                <span className={styles.badge}>{trip.transportType}</span>
-                <span className={styles.status}>{trip.status}</span>
-              </div>
+        <div>
+          <h2 className={styles.subtitle}>Your Trips ({trips.length})</h2>
+          <div className={styles.grid}>
+            {trips.map((trip) => (
+              <div key={trip.id} className={styles.card}>
+                <div className={styles.cardHeader}>
+                  <span className={styles.badge}>{trip.transportType}</span>
+                  <span className={styles.status}>{trip.status}</span>
+                </div>
 
-              <div className={styles.route}>
-                <div className={styles.location}>
-                  <i className="fa-solid fa-location-dot"></i>
-                  <span>{trip.from}</span>
+                <div className={styles.route}>
+                  <div className={styles.location}>
+                    <i className="fa-solid fa-location-dot"></i>
+                    <span>{trip.from}</span>
+                  </div>
+                  <div className={styles.arrow}>→</div>
+                  <div className={styles.location}>
+                    <i className="fa-solid fa-location-dot"></i>
+                    <span>{trip.to}</span>
+                  </div>
                 </div>
-                <div className={styles.arrow}>→</div>
-                <div className={styles.location}>
-                  <i className="fa-solid fa-location-dot"></i>
-                  <span>{trip.to}</span>
+
+                <div className={styles.details}>
+                  <div className={styles.detail}>
+                    <i className="fa-solid fa-calendar"></i>
+                    <span>{trip.date ? new Date(trip.date).toLocaleDateString() : 'N/A'}</span>
+                  </div>
+                  <div className={styles.detail}>
+                    <i className="fa-solid fa-box"></i>
+                    <span>{trip.packageSize}</span>
+                  </div>
+                  <div className={styles.detail}>
+                    <i className="fa-solid fa-dollar-sign"></i>
+                    <span>${trip.price}</span>
+                  </div>
+                </div>
+
+                {trip.description && (
+                  <p className={styles.description}>{trip.description}</p>
+                )}
+
+                <div className={styles.actions}>
+                  <button
+                    onClick={() => handleDeleteClick(trip)}
+                    className={trip.status === 'booked' ? styles.deleteBtnDisabled : styles.deleteBtn}
+                  >
+                    Delete
+                  </button>
                 </div>
               </div>
-
-              <div className={styles.details}>
-                <div className={styles.detail}>
-                  <i className="fa-solid fa-calendar"></i>
-                  <span>{trip.date ? new Date(trip.date).toLocaleDateString() : 'N/A'}</span>
-                </div>
-                <div className={styles.detail}>
-                  <i className="fa-solid fa-box"></i>
-                  <span>{trip.packageSize}</span>
-                </div>
-                <div className={styles.detail}>
-                  <i className="fa-solid fa-dollar-sign"></i>
-                  <span>${trip.price}</span>
-                </div>
-              </div>
-
-              {trip.description && (
-                <p className={styles.description}>{trip.description}</p>
-              )}
-
-              <div className={styles.actions}>
-                <button
-                  onClick={() => handleDeleteClick(trip)}
-                  className={trip.status === 'booked' ? styles.deleteBtnDisabled : styles.deleteBtn}
-                >
-                  Delete
-                </button>
-              </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
       )}
 
