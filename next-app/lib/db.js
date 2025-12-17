@@ -328,15 +328,44 @@ export const listenToMySentRequests = (callback) => {
 // ADDED: Listen to booked trips (for My Orders page)
 export const listenToMyBookings = (callback) => {
   if (!auth.currentUser) return () => {};
-  const q = query(
+
+  const tripsQuery = query(
     collection(db, "trips"),
     where("bookedByUid", "==", auth.currentUser.uid),
     orderBy("bookedAt", "desc")
   );
-  return onSnapshot(q, snap => {
-    callback(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+
+  return onSnapshot(tripsQuery, async (tripsSnap) => {
+    const trips = tripsSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+
+    const merged = await Promise.all(
+      trips.map(async (trip) => {
+        const reqSnap = await getDocs(
+          query(
+            collection(db, "booking_requests"),
+            where("tripId", "==", trip.id),
+            where("shipperId", "==", auth.currentUser.uid),
+            limit(1)
+          )
+        );
+
+        const req = reqSnap.empty ? null : { id: reqSnap.docs[0].id, ...reqSnap.docs[0].data() };
+
+        return {
+          ...trip,
+          bookingRequestId: req?.id || null,
+          weight: req?.weight ?? trip.weight ?? null,
+          pickupLocation: req?.pickupLocation ?? trip.pickupLocation ?? null,
+          dropoffLocation: req?.dropoffLocation ?? trip.dropoffLocation ?? null,
+          reward: req?.reward ?? trip.reward ?? null,
+        };
+      })
+    );
+
+    callback(merged);
   });
 };
+
 
 // ==========================
 // MESSAGING (UNCHANGED)
