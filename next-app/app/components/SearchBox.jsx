@@ -59,10 +59,11 @@ export default function SearchBox({ className = "" }) {
         value={size}
         onChange={(e) => setSize(e.target.value)}
       >
-        <option value="">Select Size</option>
-        <option value="Small">Small</option>
-        <option value="Medium">Medium</option>
-        <option value="Large">Large</option>
+        <option value="Small package (up to 2kg)">Small (up to 2kg)</option>
+        <option value="Medium package (2-5kg)">Medium (2–5kg)</option>
+        <option value="Large package (5-10kg)">Large (5–10kg)</option>
+        <option value="Extra large (10kg+)">Extra Large (10kg+)</option>
+
       </select>
 
       <button className="find-btn" onClick={handleSearch}>Find Carriers</button>
