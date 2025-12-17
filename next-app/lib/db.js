@@ -202,7 +202,7 @@ export const submitBookingRequest = async (tripId, data) => {
   await addDoc(collection(db, "notifications"), {
     userId: trip.carrierUid,
     title: "New booking request",
-    message: "Someone sent you a booking request",
+    message: `${user.displayName || user.email} requested booking for ${trip.from} → ${trip.to}`,
     link: "/my-trips",
     isRead: false,
     createdAt: serverTimestamp()
@@ -245,10 +245,13 @@ export const acceptBookingRequest = async (requestId) => {
       });
   });
 
+  const tripDoc = await getDoc(doc(db, "trips", request.tripId));
+  const trip = tripDoc.exists() ? tripDoc.data() : null;
+
   await addDoc(collection(db, "notifications"), {
     userId: request.shipperId,
     title: "Booking accepted",
-    message: "Your booking request was accepted",
+    message: trip ? `Accepted: ${trip.from} → ${trip.to}` : "Your booking request was accepted",
     link: "/my-orders",
     isRead: false,
     createdAt: serverTimestamp()
@@ -265,11 +268,17 @@ export const rejectBookingRequest = async (requestId) => {
     respondedAt: serverTimestamp()
   });
 
+  let trip = null;
+  if (request?.tripId) {
+    const tripDoc = await getDoc(doc(db, "trips", request.tripId));
+    trip = tripDoc.exists() ? tripDoc.data() : null;
+  }
+
   if (request?.shipperId) {
     await addDoc(collection(db, "notifications"), {
       userId: request.shipperId,
       title: "Booking rejected",
-      message: "Your booking request was rejected",
+      message: trip ? `Rejected: ${trip.from} → ${trip.to}` : "Your booking request was rejected",
       link: "/my-orders",
       isRead: false,
       createdAt: serverTimestamp()
