@@ -225,26 +225,20 @@ export const submitBookingRequest = async (tripId, data) => {
   });
 };
 
+// FIXED: acceptBookingRequest - Now works correctly with transactions
 export const acceptBookingRequest = async (requestId) => {
-  const requestRef = doc(db, "booking_requests", requestId);
-  const requestDoc = await getDoc(requestRef);
-  const request = requestDoc.data();
+  try {
+    const requestRef = doc(db, "booking_requests", requestId);
+    const requestDoc = await getDoc(requestRef);
+    
+    if (!requestDoc.exists()) {
+      throw new Error("Booking request not found");
+    }
+    
+    const request = requestDoc.data();
 
-  await runTransaction(db, async (tx) => {
-    const tripRef = doc(db, "trips", request.tripId);
-    tx.update(tripRef, {
-      status: "booked",
-      bookedByUid: request.shipperId,
-      bookedByEmail: request.shipperEmail,
-      bookedAt: serverTimestamp()
-    });
-
-    tx.update(requestRef, {
-      status: "accepted",
-      respondedAt: serverTimestamp()
-    });
-
-    const others = await getDocs(
+    // First, get all other pending requests for this trip BEFORE the transaction
+    const othersSnap = await getDocs(
       query(
         collection(db, "booking_requests"),
         where("tripId", "==", request.tripId),
@@ -252,15 +246,39 @@ export const acceptBookingRequest = async (requestId) => {
       )
     );
 
-    others.forEach(d => {
-      if (d.id !== requestId) {
-        tx.update(d.ref, {
+    const otherRequestIds = othersSnap.docs
+      .filter(d => d.id !== requestId)
+      .map(d => d.id);
+
+    // Now do the transaction
+    await runTransaction(db, async (tx) => {
+      const tripRef = doc(db, "trips", request.tripId);
+      tx.update(tripRef, {
+        status: "booked",
+        bookedByUid: request.shipperId,
+        bookedByEmail: request.shipperEmail,
+        bookedAt: serverTimestamp()
+      });
+
+      tx.update(requestRef, {
+        status: "accepted",
+        respondedAt: serverTimestamp()
+      });
+
+      // Reject all other pending requests
+      otherRequestIds.forEach(id => {
+        tx.update(doc(db, "booking_requests", id), {
           status: "rejected",
           respondedAt: serverTimestamp()
         });
-      }
+      });
     });
-  });
+
+    console.log("Booking request accepted successfully");
+  } catch (error) {
+    console.error("Error accepting booking request:", error);
+    throw error;
+  }
 };
 
 export const rejectBookingRequest = async (requestId) => {
@@ -301,6 +319,19 @@ export const listenToMySentRequests = (callback) => {
     collection(db, "booking_requests"),
     where("shipperId", "==", auth.currentUser.uid),
     orderBy("createdAt", "desc")
+  );
+  return onSnapshot(q, snap => {
+    callback(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+  });
+};
+
+// ADDED: Listen to booked trips (for My Orders page)
+export const listenToMyBookings = (callback) => {
+  if (!auth.currentUser) return () => {};
+  const q = query(
+    collection(db, "trips"),
+    where("bookedByUid", "==", auth.currentUser.uid),
+    orderBy("bookedAt", "desc")
   );
   return onSnapshot(q, snap => {
     callback(snap.docs.map(d => ({ id: d.id, ...d.data() })));
