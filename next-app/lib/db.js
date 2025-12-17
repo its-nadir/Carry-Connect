@@ -24,16 +24,13 @@ import {
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { db, auth, storage } from "./firebase";
 
-// Re-export auth and db
 export { auth, db };
 
-// Authentication Functions
 export const signUp = (email, password) => createUserWithEmailAndPassword(auth, email, password);
 export const signIn = (email, password) => signInWithEmailAndPassword(auth, email, password);
 export const logOut = () => signOut(auth);
 export const onAuthChange = (callback) => onAuthStateChanged(auth, callback);
 
-// User Profile Management
 export const saveUserProfile = async (name, phone) => {
   if (!auth.currentUser) return;
   await updateDoc(doc(db, "users", auth.currentUser.uid), {
@@ -43,104 +40,57 @@ export const saveUserProfile = async (name, phone) => {
 
 export async function getUserProfile(userId) {
   try {
-    const docRef = doc(db, 'users', userId);
+    const docRef = doc(db, "users", userId);
     const docSnap = await getDoc(docRef);
     if (docSnap.exists()) {
       return { id: docSnap.id, ...docSnap.data() };
     }
     return null;
-  } catch (error) {
-    console.error('Error getting user profile:', error);
+  } catch {
     return null;
   }
 }
 
 export async function setUserProfile(userId, profileData) {
   try {
-    const docRef = doc(db, 'users', userId);
+    const docRef = doc(db, "users", userId);
     await updateDoc(docRef, {
       ...profileData,
       updatedAt: serverTimestamp()
     });
     return true;
-  } catch (error) {
-    console.error('Error setting user profile:', error);
+  } catch {
     return false;
   }
 }
 
 export const uploadProfileImage = async (userId, file) => {
-  try {
-    const storageRef = ref(storage, `profile_images/${userId}`);
-    await uploadBytes(storageRef, file);
-    const downloadURL = await getDownloadURL(storageRef);
-    return downloadURL;
-  } catch (error) {
-    console.error("Error uploading profile image:", error);
-    throw error;
-  }
+  const storageRef = ref(storage, `profile_images/${userId}`);
+  await uploadBytes(storageRef, file);
+  return await getDownloadURL(storageRef);
 };
 
 export const updateUserProfile = setUserProfile;
 
-// ==========================
-// USER DATA
-// ==========================
-
 export const getUserTrips = async (userId) => {
-  try {
-    const q = query(
-      collection(db, "trips"),
-      where("carrierUid", "==", userId),
-      orderBy("createdAt", "desc")
-    );
-    const snap = await getDocs(q);
-    return snap.docs.map(d => ({
-      id: d.id,
-      ...d.data(),
-      date: d.data().date?.toDate ? d.data().date.toDate() : new Date(d.data().date)
-    }));
-  } catch (error) {
-    console.error("Error getting user trips:", error);
-    return [];
-  }
+  const q = query(
+    collection(db, "trips"),
+    where("carrierUid", "==", userId),
+    orderBy("createdAt", "desc")
+  );
+  const snap = await getDocs(q);
+  return snap.docs.map(d => ({
+    id: d.id,
+    ...d.data(),
+    date: d.data().date?.toDate ? d.data().date.toDate() : new Date(d.data().date)
+  }));
 };
 
 export const getUserOrders = async (userId) => {
-  try {
-    const q = query(collection(db, "trips"), where("bookedByUid", "==", userId));
-    const snap = await getDocs(q);
-    const orders = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-    return orders.sort((a, b) => {
-      const dateA = a.bookedAt?.toDate ? a.bookedAt.toDate() : new Date(a.bookedAt || 0);
-      const dateB = b.bookedAt?.toDate ? b.bookedAt.toDate() : new Date(b.bookedAt || 0);
-      return dateB - dateA;
-    });
-  } catch (error) {
-    console.error("Error getting user orders:", error);
-    return [];
-  }
+  const q = query(collection(db, "trips"), where("bookedByUid", "==", userId));
+  const snap = await getDocs(q);
+  return snap.docs.map(d => ({ id: d.id, ...d.data() }));
 };
-
-export const getUserReviews = async (userId) => {
-  try {
-    const q = query(collection(db, "reviews"), where("targetUid", "==", userId));
-    const snap = await getDocs(q);
-    const reviews = snap.docs.map(d => ({
-      id: d.id,
-      ...d.data(),
-      createdAt: d.data().createdAt?.toDate()
-    }));
-    return reviews.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
-  } catch (error) {
-    console.error("Error getting user reviews:", error);
-    return [];
-  }
-};
-
-// ==========================
-// TRIPS
-// ==========================
 
 export const postTrip = async ({ from, to, date, transportType, packageSize, price, description = "" }) => {
   if (!auth.currentUser) throw new Error("Login required");
@@ -164,7 +114,6 @@ export const postTrip = async ({ from, to, date, transportType, packageSize, pri
 };
 
 export const deleteTrip = async (tripId) => {
-  if (!auth.currentUser) throw new Error("Login required");
   await deleteDoc(doc(db, "trips", tripId));
 };
 
@@ -198,10 +147,6 @@ export const listenToMyTrips = (callback) => {
   });
 };
 
-// ==========================
-// BOOKING REQUEST SYSTEM (ADDED)
-// ==========================
-
 export const submitBookingRequest = async (tripId, data) => {
   const user = auth.currentUser;
   if (!user) throw new Error("Login required");
@@ -225,60 +170,41 @@ export const submitBookingRequest = async (tripId, data) => {
   });
 };
 
-// FIXED: acceptBookingRequest - Now works correctly with transactions
 export const acceptBookingRequest = async (requestId) => {
-  try {
-    const requestRef = doc(db, "booking_requests", requestId);
-    const requestDoc = await getDoc(requestRef);
-    
-    if (!requestDoc.exists()) {
-      throw new Error("Booking request not found");
-    }
-    
-    const request = requestDoc.data();
+  const requestRef = doc(db, "booking_requests", requestId);
+  const requestDoc = await getDoc(requestRef);
+  const request = requestDoc.data();
 
-    // First, get all other pending requests for this trip BEFORE the transaction
-    const othersSnap = await getDocs(
-      query(
-        collection(db, "booking_requests"),
-        where("tripId", "==", request.tripId),
-        where("status", "==", "pending")
-      )
-    );
+  const othersSnap = await getDocs(
+    query(
+      collection(db, "booking_requests"),
+      where("tripId", "==", request.tripId),
+      where("status", "==", "pending")
+    )
+  );
 
-    const otherRequestIds = othersSnap.docs
+  await runTransaction(db, async (tx) => {
+    tx.update(doc(db, "trips", request.tripId), {
+      status: "booked",
+      bookedByUid: request.shipperId,
+      bookedByEmail: request.shipperEmail,
+      bookedAt: serverTimestamp()
+    });
+
+    tx.update(requestRef, {
+      status: "accepted",
+      respondedAt: serverTimestamp()
+    });
+
+    othersSnap.docs
       .filter(d => d.id !== requestId)
-      .map(d => d.id);
-
-    // Now do the transaction
-    await runTransaction(db, async (tx) => {
-      const tripRef = doc(db, "trips", request.tripId);
-      tx.update(tripRef, {
-        status: "booked",
-        bookedByUid: request.shipperId,
-        bookedByEmail: request.shipperEmail,
-        bookedAt: serverTimestamp()
-      });
-
-      tx.update(requestRef, {
-        status: "accepted",
-        respondedAt: serverTimestamp()
-      });
-
-      // Reject all other pending requests
-      otherRequestIds.forEach(id => {
-        tx.update(doc(db, "booking_requests", id), {
+      .forEach(d => {
+        tx.update(doc(db, "booking_requests", d.id), {
           status: "rejected",
           respondedAt: serverTimestamp()
         });
       });
-    });
-
-    console.log("Booking request accepted successfully");
-  } catch (error) {
-    console.error("Error accepting booking request:", error);
-    throw error;
-  }
+  });
 };
 
 export const rejectBookingRequest = async (requestId) => {
@@ -300,19 +226,6 @@ export const listenToMyBookingRequests = (callback) => {
   });
 };
 
-export const listenToMyBookingRequestStatus = (tripId, callback) => {
-  if (!auth.currentUser) return () => {};
-  const q = query(
-    collection(db, "booking_requests"),
-    where("tripId", "==", tripId),
-    where("shipperId", "==", auth.currentUser.uid)
-  );
-  return onSnapshot(q, snap => {
-    callback(snap.empty ? null : { id: snap.docs[0].id, ...snap.docs[0].data() });
-  });
-};
-
-// ADDED: Listen to sent booking requests (for My Orders page)
 export const listenToMySentRequests = (callback) => {
   if (!auth.currentUser) return () => {};
   const q = query(
@@ -325,7 +238,6 @@ export const listenToMySentRequests = (callback) => {
   });
 };
 
-// ADDED: Listen to booked trips (for My Orders page)
 export const listenToMyBookings = (callback) => {
   if (!auth.currentUser) return () => {};
 
@@ -354,10 +266,10 @@ export const listenToMyBookings = (callback) => {
         return {
           ...trip,
           bookingRequestId: req?.id || null,
-          weight: req?.weight ?? trip.weight ?? null,
-          pickupLocation: req?.pickupLocation ?? trip.pickupLocation ?? null,
-          dropoffLocation: req?.dropoffLocation ?? trip.dropoffLocation ?? null,
-          reward: req?.reward ?? trip.reward ?? null,
+          weight: req?.weight ?? null,
+          reward: req?.reward ?? null,
+          pickupLocation: req?.pickupLocation ?? null,
+          dropoffLocation: req?.dropoffLocation ?? null
         };
       })
     );
@@ -366,10 +278,34 @@ export const listenToMyBookings = (callback) => {
   });
 };
 
+export const createNotification = async ({ userId, title, message, link }) => {
+  await addDoc(collection(db, "notifications"), {
+    userId,
+    title,
+    message,
+    link,
+    isRead: false,
+    createdAt: serverTimestamp()
+  });
+};
 
-// ==========================
-// MESSAGING (UNCHANGED)
-// ==========================
+export const listenToNotifications = (callback) => {
+  if (!auth.currentUser) return () => {};
+  const q = query(
+    collection(db, "notifications"),
+    where("userId", "==", auth.currentUser.uid),
+    orderBy("createdAt", "desc")
+  );
+  return onSnapshot(q, snap => {
+    callback(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+  });
+};
+
+export const markNotificationRead = async (id) => {
+  await updateDoc(doc(db, "notifications", id), {
+    isRead: true
+  });
+};
 
 let currentTripId = null;
 export const setCurrentTripId = (id) => currentTripId = id;
@@ -394,26 +330,5 @@ export const listenToTripChat = (callback) => {
     callback(snap.docs.map(d => ({ id: d.id, ...d.data() })));
   });
 };
-
-export const listenToTripLastMessage = (tripId, callback) => {
-  const q = query(
-    collection(db, "trips", tripId, "messages"),
-    orderBy("sentAt", "desc"),
-    limit(1)
-  );
-  return onSnapshot(q, snap => {
-    callback(snap.empty ? null : { id: snap.docs[0].id, ...snap.docs[0].data() });
-  });
-};
-
-export async function getConversations(userId) {
-  const q = query(
-    collection(db, "conversations"),
-    where("participants", "array-contains", userId),
-    orderBy("lastMessageAt", "desc")
-  );
-  const snap = await getDocs(q);
-  return snap.docs.map(d => ({ id: d.id, ...d.data() }));
-}
 
 console.log("CarryConnect db.js loaded");
