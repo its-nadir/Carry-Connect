@@ -3,65 +3,52 @@
 import { useEffect, useState } from "react";
 import styles from "./messages.module.css";
 import {
-  setCurrentTripId,
-  sendTripMessage,
-  listenToTripChat,
-  listenToTripLastMessage,
   auth,
-  onAuthChange,
-  getUserTrips,
-  getUserOrders
+  listenToUserTrips,
+  listenToUserOrders,
+  listenToMessages,
+  sendMessage
 } from "../../lib/db";
 
 export default function MessagesPage() {
-  const [user, setUser] = useState(null);
   const [trips, setTrips] = useState([]);
-  const [selectedTripId, setSelectedTripId] = useState(null);
+  const [selectedTrip, setSelectedTrip] = useState(null);
   const [messages, setMessages] = useState([]);
-  const [lastMessages, setLastMessages] = useState({});
   const [newMessage, setNewMessage] = useState("");
 
   useEffect(() => {
-    const unsubscribe = onAuthChange(async (u) => {
-      setUser(u);
-      if (!u) return;
+    if (!auth.currentUser) return;
 
-      const carrierTrips = await getUserTrips(u.uid);
-      const bookedTrips = await getUserOrders(u.uid);
-
-      const allTrips = [...carrierTrips, ...bookedTrips].filter(
-        (trip) => trip.status === "accepted"
-      );
-
-      setTrips(allTrips);
+    const unsubCarrier = listenToUserTrips(auth.currentUser.uid, (carrierTrips) => {
+      setTrips((prev) => {
+        const merged = [...prev.filter(t => t.carrierUid !== auth.currentUser.uid), ...carrierTrips];
+        return merged.filter(t => t.status === "accepted");
+      });
     });
 
-    return () => unsubscribe();
+    const unsubOrders = listenToUserOrders(auth.currentUser.uid, (orders) => {
+      setTrips((prev) => {
+        const merged = [...prev.filter(t => t.bookedByUid !== auth.currentUser.uid), ...orders];
+        return merged.filter(t => t.status === "accepted");
+      });
+    });
+
+    return () => {
+      unsubCarrier();
+      unsubOrders();
+    };
   }, []);
 
   useEffect(() => {
-    if (!selectedTripId) return;
-
-    const unsubscribeMessages = listenToTripChat(selectedTripId, setMessages);
-    const unsubscribeLast = listenToTripLastMessage(selectedTripId, (msg) => {
-      setLastMessages((prev) => ({
-        ...prev,
-        [selectedTripId]: msg
-      }));
-    });
-
-    setCurrentTripId(selectedTripId);
-
-    return () => {
-      unsubscribeMessages();
-      unsubscribeLast();
-    };
-  }, [selectedTripId]);
+    if (!selectedTrip) return;
+    const unsub = listenToMessages(selectedTrip.id, setMessages);
+    return () => unsub();
+  }, [selectedTrip]);
 
   const handleSend = async (e) => {
     e.preventDefault();
-    if (!newMessage.trim() || !selectedTripId) return;
-    await sendTripMessage(selectedTripId, newMessage);
+    if (!newMessage.trim() || !selectedTrip) return;
+    await sendMessage(selectedTrip.id, newMessage);
     setNewMessage("");
   };
 
@@ -72,15 +59,10 @@ export default function MessagesPage() {
         {trips.map((trip) => (
           <div
             key={trip.id}
-            className={`${styles.tripItem} ${
-              selectedTripId === trip.id ? styles.active : ""
-            }`}
-            onClick={() => setSelectedTripId(trip.id)}
+            className={`${styles.tripItem} ${selectedTrip?.id === trip.id ? styles.active : ""}`}
+            onClick={() => setSelectedTrip(trip)}
           >
-            <p>
-              {trip.from} → {trip.to}
-            </p>
-            <span>{lastMessages[trip.id]?.text || ""}</span>
+            {trip.from} → {trip.to}
           </div>
         ))}
       </div>
@@ -90,18 +72,14 @@ export default function MessagesPage() {
           {messages.map((msg) => (
             <div
               key={msg.id}
-              className={
-                msg.senderUid === user?.uid
-                  ? styles.sent
-                  : styles.received
-              }
+              className={msg.senderUid === auth.currentUser.uid ? styles.sent : styles.received}
             >
               {msg.text}
             </div>
           ))}
         </div>
 
-        {selectedTripId && (
+        {selectedTrip && (
           <form onSubmit={handleSend} className={styles.inputArea}>
             <input
               value={newMessage}
