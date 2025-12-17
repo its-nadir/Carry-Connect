@@ -569,3 +569,46 @@ select.input-field {
   background-clip: text;
   color: transparent;
 }
+.cc-notifDropdown {
+  position: absolute;
+  top: 55px;
+  right: 120px;
+  width: 280px;
+  background: white;
+  border-radius: 10px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+  z-index: 1000;
+  overflow: hidden;
+}
+
+.cc-notifItem {
+  padding: 12px 14px;
+  cursor: pointer;
+  border-bottom: 1px solid #eee;
+}
+
+.cc-notifItem:hover {
+  background: #f5f5f5;
+}
+
+.cc-notifItem.unread {
+  background: #eef4ff;
+}
+
+.cc-notifItem strong {
+  display: block;
+  font-size: 14px;
+}
+
+.cc-notifItem p {
+  font-size: 12px;
+  color: #555;
+  margin: 4px 0 0;
+}
+
+.cc-notifEmpty {
+  padding: 14px;
+  text-align: center;
+  font-size: 13px;
+  color: #777;
+}
