@@ -198,6 +198,15 @@ export const submitBookingRequest = async (tripId, data) => {
     createdAt: serverTimestamp(),
     respondedAt: null
   });
+
+  await addDoc(collection(db, "notifications"), {
+    userId: trip.carrierUid,
+    title: "New booking request",
+    message: "Someone sent you a booking request",
+    link: "/my-trips",
+    isRead: false,
+    createdAt: serverTimestamp()
+  });
 };
 
 export const acceptBookingRequest = async (requestId) => {
@@ -235,6 +244,14 @@ export const acceptBookingRequest = async (requestId) => {
         });
       });
   });
+  await addDoc(collection(db, "notifications"), {
+  userId: request.shipperId,
+  title: "Booking accepted",
+  message: "Your booking request was accepted",
+  link: "/my-orders",
+  isRead: false,
+  createdAt: serverTimestamp()
+});
 };
 
 export const rejectBookingRequest = async (requestId) => {
