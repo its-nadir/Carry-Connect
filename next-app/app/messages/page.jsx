@@ -146,9 +146,11 @@ function MessagesContent() {
     };
   }, [selectedTripId]);
 
+  // ✅ FIX 2: prevent unnecessary re-push & scroll reset
   const openChat = tripId => {
+    if (tripId === selectedTripId) return;
     if (user) setLastSeen(user.uid, tripId);
-    router.push(`/messages?tripId=${tripId}`);
+    router.push(`/messages?tripId=${tripId}`, { scroll: false });
   };
 
   const send = () => {
@@ -239,10 +241,8 @@ function MessagesContent() {
 
               <div className={styles.messages} ref={messagesBoxRef}>
                 {messages.map(m => {
-                  const isMine =
-                    m.senderUid === auth?.currentUser?.uid;
+                  const isMine = m.senderUid === auth?.currentUser?.uid;
 
-                  /* ✅ FIXED LINE — NOTHING ELSE CHANGED */
                   const msgMillis =
                     m.sentAt && typeof m.sentAt.toMillis === "function"
                       ? m.sentAt.toMillis()
@@ -268,16 +268,8 @@ function MessagesContent() {
                         </div>
                       )}
 
-                      <div
-                        className={isMine ? styles.msgBoxRight : styles.msgBox}
-                      >
-                        <div
-                          className={
-                            isMine
-                              ? styles.msgBubbleBlue
-                              : styles.msgBubbleGray
-                          }
-                        >
+                      <div className={isMine ? styles.msgBoxRight : styles.msgBox}>
+                        <div className={isMine ? styles.msgBubbleBlue : styles.msgBubbleGray}>
                           <div className={styles.msgText}>{m.text}</div>
 
                           <div className={styles.msgMeta}>
@@ -287,13 +279,7 @@ function MessagesContent() {
 
                             {isMine && (
                               <span className={styles.msgStatus}>
-                                <span
-                                  className={
-                                    seen
-                                      ? styles.statusDoubleSeen
-                                      : styles.statusSingleDelivered
-                                  }
-                                >
+                                <span className={seen ? styles.statusDoubleSeen : styles.statusSingleDelivered}>
                                   <svg viewBox="0 0 24 24">
                                     <path d="M9 16.2L4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4z" />
                                   </svg>
