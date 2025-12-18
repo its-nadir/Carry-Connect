@@ -14,12 +14,12 @@
 }
 
 .sidebar {
-  width: 360px;
+  width: 380px;
+  min-width: 380px;
   border-right: 1px solid #e4e6eb;
   background: #fff;
   display: flex;
   flex-direction: column;
-  overflow-y: auto;
 }
 
 .sidebarTitle {
@@ -27,10 +27,12 @@
   font-size: 24px;
   font-weight: 700;
   border-bottom: 1px solid #e4e6eb;
-  position: sticky;
-  top: 0;
   background: #fff;
-  z-index: 10;
+}
+
+.conversationList {
+  flex: 1;
+  overflow-y: auto;
 }
 
 .chatItem {
@@ -40,6 +42,7 @@
   cursor: pointer;
   transition: background 0.15s ease;
   border-bottom: 1px solid #f0f2f5;
+  position: relative;
 }
 
 .chatItem:hover {
@@ -51,6 +54,15 @@
 }
 
 .chatItemUnread:hover {
+  background: #e6f2ff;
+}
+
+.chatItemSelected {
+  background: #e6f2ff;
+  border-left: 3px solid #0084ff;
+}
+
+.chatItemSelected:hover {
   background: #e6f2ff;
 }
 
@@ -145,34 +157,17 @@
   display: flex;
   flex-direction: column;
   background: #fff;
+  min-width: 0;
 }
 
 .header {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 14px 16px;
+  padding: 16px 20px;
   border-bottom: 1px solid #e4e6eb;
   background: #fff;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
-}
-
-.backBtn {
-  font-size: 22px;
-  background: none;
-  border: none;
-  cursor: pointer;
-  padding: 4px 8px;
-  color: #050505;
-  transition: background 0.15s ease;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.backBtn:hover {
-  background: #f0f2f5;
 }
 
 .headerInfo {
@@ -275,21 +270,25 @@
   opacity: 0.7;
 }
 
-.check {
-  font-size: 14px;
-  font-weight: 600;
-  line-height: 1;
+.checkmarks {
+  display: inline-flex;
+  align-items: center;
+  margin-left: 2px;
 }
 
-.statusSent {
+.checkSent {
   color: rgba(255, 255, 255, 0.7);
 }
 
-.statusRead {
+.checkDelivered {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.checkRead {
   color: #4fc3f7;
 }
 
-.bubbleGray .statusRead {
+.bubbleGray .checkRead {
   color: #0084ff;
 }
 
@@ -365,21 +364,23 @@
 }
 
 @media (max-width: 900px) {
-  .container {
-    flex-direction: column;
-  }
-
   .sidebar {
     width: 100%;
+    min-width: 100%;
+    position: absolute;
+    left: 0;
+    top: 0;
+    height: 100%;
+    z-index: 10;
+    transform: translateX(0);
+    transition: transform 0.3s ease;
   }
 
-  .backBtn {
-    display: flex;
+  .sidebar.hidden {
+    transform: translateX(-100%);
   }
-}
 
-@media (min-width: 901px) {
-  .backBtn {
-    display: none;
+  .chatWindow {
+    width: 100%;
   }
 }
