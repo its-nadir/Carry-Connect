@@ -36,6 +36,10 @@
   font-weight: 700;
   color: #050505;
   border-bottom: 1px solid #e4e6eb;
+  position: sticky;
+  top: 0;
+  background: #fff;
+  z-index: 10;
 }
 
 .chatItem {
@@ -44,13 +48,17 @@
   gap: 12px;
   padding: 12px 16px;
   cursor: pointer;
-  transition: background 0.2s;
+  transition: background 0.15s ease;
   border-bottom: 1px solid #f0f2f5;
   position: relative;
 }
 
 .chatItem:hover {
   background: #f2f3f5;
+}
+
+.chatItem:active {
+  background: #e4e6eb;
 }
 
 .selectedChat {
@@ -95,6 +103,18 @@
   border-radius: 50%;
   background: #0084ff;
   flex-shrink: 0;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.7;
+    transform: scale(1.1);
+  }
 }
 
 .chatRoute {
@@ -172,7 +192,7 @@
   padding: 20px;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 4px;
   background: #f0f2f5;
   scroll-behavior: smooth;
 }
@@ -199,7 +219,7 @@
   display: flex;
   justify-content: flex-start;
   align-items: flex-end;
-  margin-bottom: 4px;
+  margin-bottom: 2px;
   animation: slideIn 0.2s ease-out;
 }
 
@@ -207,7 +227,7 @@
   display: flex;
   justify-content: flex-end;
   align-items: flex-end;
-  margin-bottom: 4px;
+  margin-bottom: 2px;
   animation: slideIn 0.2s ease-out;
 }
 
@@ -225,27 +245,29 @@
 /* Message bubbles */
 .msgBubbleGray {
   max-width: 65%;
-  padding: 10px 14px;
+  padding: 8px 12px;
   border-radius: 18px;
   background: #e4e6eb;
   word-wrap: break-word;
   box-shadow: 0 1px 1px rgba(0, 0, 0, 0.05);
+  position: relative;
 }
 
 .msgBubbleBlue {
   max-width: 65%;
-  padding: 10px 14px;
+  padding: 8px 12px;
   border-radius: 18px;
   background: #0084ff;
   color: #fff;
   word-wrap: break-word;
   box-shadow: 0 1px 1px rgba(0, 0, 0, 0.1);
+  position: relative;
 }
 
 .msgText {
   font-size: 15px;
   line-height: 1.4;
-  margin-bottom: 4px;
+  margin-bottom: 2px;
   word-break: break-word;
 }
 
@@ -269,6 +291,7 @@
 .msgClock {
   font-size: 11px;
   opacity: 0.7;
+  line-height: 1;
 }
 
 .msgBubbleGray .msgClock {
@@ -287,6 +310,7 @@
   position: relative;
   width: 16px;
   height: 12px;
+  margin-left: 2px;
 }
 
 .statusSingleDelivered svg,
@@ -314,6 +338,18 @@
 .statusDoubleSeen svg {
   fill: #4fc3f7;
   opacity: 1;
+  animation: checkSeen 0.3s ease-out;
+}
+
+@keyframes checkSeen {
+  from {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
 /* Input area */
@@ -330,6 +366,11 @@
   background: #f0f2f5;
   border-radius: 24px;
   padding: 6px 8px 6px 16px;
+  transition: background 0.2s;
+}
+
+.inputWrapper:focus-within {
+  background: #e4e6eb;
 }
 
 .inputField {
@@ -359,13 +400,19 @@
   white-space: nowrap;
 }
 
-.sendBtn:hover {
+.sendBtn:hover:not(:disabled) {
   background: #0073e6;
   transform: scale(1.02);
 }
 
-.sendBtn:active {
+.sendBtn:active:not(:disabled) {
   transform: scale(0.98);
+}
+
+.sendBtn:disabled {
+  background: #b0b3b8;
+  cursor: not-allowed;
+  opacity: 0.6;
 }
 
 /* No chat selected */
@@ -375,11 +422,13 @@
   justify-content: center;
   height: 100%;
   color: #65676b;
+  background: #f0f2f5;
 }
 
 .noChatSelected h3 {
   font-size: 18px;
   font-weight: 500;
+  color: #65676b;
 }
 
 /* Mobile responsive */
@@ -396,11 +445,9 @@
 
   .sidebar {
     width: 100%;
-    display: none;
-  }
-
-  .sidebar.showSidebar {
-    display: flex;
+    position: absolute;
+    z-index: 100;
+    height: 100%;
   }
 
   .chatWindow {
@@ -409,13 +456,13 @@
 
   .msgBubbleGray,
   .msgBubbleBlue {
-    max-width: 80%;
+    max-width: 75%;
   }
 }
 
 @media (max-width: 768px) {
   .sidebar {
-    width: 340px;
+    width: 100%;
   }
 
   .chatAvatar {
@@ -426,7 +473,12 @@
 
   .msgBubbleGray,
   .msgBubbleBlue {
-    max-width: 85%;
+    max-width: 80%;
+  }
+
+  .sidebarTitle {
+    font-size: 20px;
+    padding: 20px 16px;
   }
 }
 
@@ -437,10 +489,15 @@
 
   .msgBubbleGray,
   .msgBubbleBlue {
-    max-width: 90%;
+    max-width: 85%;
   }
 
   .inputArea {
     padding: 8px 12px;
+  }
+
+  .sendBtn {
+    padding: 8px 16px;
+    font-size: 13px;
   }
 }
