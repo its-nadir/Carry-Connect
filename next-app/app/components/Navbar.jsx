@@ -49,24 +49,6 @@ export default function Navbar() {
     let unsubs = []
     const unreadMap = {}
 
-    const getSeenKey = (uid, tripId) => `cc_seen_${uid}_${tripId}`
-
-    const getLastSeen = (uid, tripId) => {
-      try {
-        const raw = localStorage.getItem(getSeenKey(uid, tripId))
-        return raw ? Number(raw) : 0
-      } catch {
-        return 0
-      }
-    }
-
-    const toMillis = (ts) => {
-      if (!ts) return 0
-      if (ts?.toMillis) return ts.toMillis()
-      if (ts?.toDate) return ts.toDate().getTime()
-      return new Date(ts).getTime()
-    }
-
     async function init() {
       try {
         const {
@@ -83,24 +65,30 @@ export default function Navbar() {
         const ids = Array.from(new Set(trips.map(t => t.id)))
         setTrackedTripIds(ids)
 
+        // Listen to last messages for unread indicator
         unsubs = ids.map(tripId =>
           listenToTripLastMessage(tripId, (msg) => {
             if (!mounted || !msg) return
 
             const seenBy = Array.isArray(msg.seenBy) ? msg.seenBy : []
+            // Message is unread if it's not from me and I haven't seen it
             unreadMap[tripId] = msg.senderUid !== user.uid && !seenBy.includes(user.uid)
 
+            // Update badge
             setHasUnreadMessages(Object.values(unreadMap).some(Boolean))
           })
         )
 
+        // Listen to notifications
         const unsubNotif = listenToNotifications((list) => {
           setNotifications(list.slice(0, 12))
           setHasUnreadNotifications(list.some(n => !n.isRead))
         })
 
         unsubs.push(unsubNotif)
-      } catch {}
+      } catch (err) {
+        console.error("Error initializing navbar:", err)
+      }
     }
 
     init()
@@ -126,11 +114,8 @@ export default function Navbar() {
     router.push("/")
   }
 
-  const openMessages = async () => {
-    try {
-      const { markTripMessagesSeen } = await import("../../lib/db")
-      await Promise.all((trackedTripIds || []).map(id => markTripMessagesSeen(id)))
-    } catch {}
+  // FIXED: Navigate immediately without blocking
+  const openMessages = () => {
     router.push("/messages")
   }
 
