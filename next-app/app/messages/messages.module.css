@@ -173,7 +173,7 @@
   font-size: 15px;
 }
 
-/* Day separator (Today / Yesterday / Date) */
+/* Day separator */
 .dayDivider {
   display: flex;
   justify-content: center;
@@ -233,8 +233,8 @@
   display: flex;
   justify-content: flex-end;
   align-items: center;
-  gap: 8px;
-  margin-top: 6px;
+  gap: 6px;
+  margin-top: 4px;
   font-size: 11px;
   opacity: 0.9;
 }
@@ -248,33 +248,36 @@
   align-items: center;
 }
 
-/* ✅ Telegram/WhatsApp-style checks using SVG (no emojis) */
+/* ================= TELEGRAM / WHATSAPP CHECKS (REAL FIX) ================= */
+
 .statusSingleDelivered,
 .statusDoubleSeen {
   display: inline-flex;
   align-items: center;
 }
 
-/* size + base color */
+/* smaller size + vertical alignment */
 .statusSingleDelivered svg,
 .statusDoubleSeen svg {
-  width: 14px;
-  height: 14px;
+  width: 13px;
+  height: 13px;
+  position: relative;
+  top: 1px;
 }
 
-/* Delivered (single check) */
+/* single check */
 .statusSingleDelivered svg {
   fill: rgba(255,255,255,0.9);
 }
 
-/* Seen (double check) - lighter blue-ish like apps */
+/* double check */
 .statusDoubleSeen svg {
-  fill: rgba(200,235,255,0.95);
+  fill: rgba(190,225,255,1);
 }
 
-/* ✅ IMPORTANT FIX: make double checks tight/overlapped (not far apart) */
+/* STRONG overlap like Telegram */
 .statusDoubleSeen svg:first-child {
-  margin-right: -6px;
+  margin-right: -9px;
 }
 
 /* ================= INPUT ================= */
