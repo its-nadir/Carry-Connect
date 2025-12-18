@@ -6,6 +6,9 @@ import { useSearchParams } from "next/navigation";
 import SearchBox from "../components/SearchBox";
 import styles from "./find.module.css";
 
+// Add this import at the top
+import { listenToAvailableTrips, onAuthChange } from "../../lib/db";
+
 function FindCarrierContent() {
   const searchParams = useSearchParams();
   const [carriers, setCarriers] = useState([]);
@@ -13,29 +16,24 @@ function FindCarrierContent() {
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState(null);
 
-  // UI State
-  const [viewMode, setViewMode] = useState("grid"); // 'grid' or 'list'
+  const [viewMode, setViewMode] = useState("grid");
   const [showFilters, setShowFilters] = useState(false);
-
-  // Advanced Filters State
   const [priceRange, setPriceRange] = useState(1000);
   const [selectedTransport, setSelectedTransport] = useState("All");
 
   useEffect(() => {
-    async function loadCarriers() {
-      try {
-        const { listenToAvailableTrips, onAuthChange } = await import("../../lib/db");
+    let unsubscribeAuth = null;
+    let unsubscribeTrips = null;
 
-        const unsubscribeAuth = onAuthChange((u) => setUser(u));
-        const unsubscribeTrips = listenToAvailableTrips((data) => {
-          setCarriers(data);
+    function loadCarriers() {
+      try {
+        // Remove dynamic import - use direct function calls
+        unsubscribeAuth = onAuthChange((u) => setUser(u));
+
+        unsubscribeTrips = listenToAvailableTrips((data) => {
+          setCarriers(Array.isArray(data) ? data : []);
           setLoading(false);
         });
-
-        return () => {
-          unsubscribeAuth();
-          unsubscribeTrips();
-        };
       } catch (error) {
         console.error("Error loading carriers:", error);
         setLoading(false);
@@ -43,11 +41,15 @@ function FindCarrierContent() {
     }
 
     loadCarriers();
+
+    return () => {
+      if (unsubscribeAuth) unsubscribeAuth();
+      if (unsubscribeTrips) unsubscribeTrips();
+    };
   }, []);
 
-  // Filter Logic
   useEffect(() => {
-    if (!carriers.length) {
+    if (!Array.isArray(carriers) || carriers.length === 0) {
       setFilteredCarriers([]);
       return;
     }
@@ -58,36 +60,39 @@ function FindCarrierContent() {
     const sizeQuery = searchParams.get("size");
 
     const filtered = carriers.filter((trip) => {
-      // 1. Search Box Filters
-      const matchesFrom = !fromQuery || trip.from.toLowerCase().includes(fromQuery);
-      const matchesTo = !toQuery || trip.to.toLowerCase().includes(toQuery);
+      if (!trip) return false;
+
+      const matchesFrom = !fromQuery || trip.from?.toLowerCase().includes(fromQuery);
+      const matchesTo = !toQuery || trip.to?.toLowerCase().includes(toQuery);
 
       let matchesDate = true;
-      if (dateQuery) {
-        const tripDateObj = trip.date?.toDate ? trip.date.toDate() : new Date(trip.date); 
+      if (dateQuery && trip.date) {
+        const tripDateObj = trip.date?.toDate ? trip.date.toDate() : new Date(trip.date);
         const tripDate = tripDateObj.setHours(0, 0, 0, 0);
         const queryDate = new Date(dateQuery).setHours(0, 0, 0, 0);
         matchesDate = tripDate >= queryDate;
       }
 
       const matchesSize = !sizeQuery || trip.packageSize === sizeQuery;
-
-      // 2. Advanced Filters
       const matchesPrice = trip.price <= priceRange;
-      const matchesTransport = selectedTransport === "All" || trip.transportType === selectedTransport;
+      const matchesTransport =
+        selectedTransport === "All" || trip.transportType === selectedTransport;
 
-      return matchesFrom && matchesTo && matchesDate && matchesSize && matchesPrice && matchesTransport;
+      return (
+        matchesFrom &&
+        matchesTo &&
+        matchesDate &&
+        matchesSize &&
+        matchesPrice &&
+        matchesTransport
+      );
     });
 
     setFilteredCarriers(filtered);
   }, [carriers, searchParams, priceRange, selectedTransport]);
 
   if (loading) {
-    return (
-      <div className={styles.loading}>
-        Loading carriers...
-      </div>
-    );
+    return <div className={styles.loading}>Loading carriers...</div>;
   }
 
   return (
@@ -96,7 +101,7 @@ function FindCarrierContent() {
 
       <div className={styles.topActions}>
         <button
-          className={`${styles.filterBtn} ${showFilters ? styles.active : ''}`}
+          className={`${styles.filterBtn} ${showFilters ? styles.active : ""}`}
           onClick={() => setShowFilters(!showFilters)}
         >
           <i className="fa-solid fa-filter"></i> Filters
@@ -110,18 +115,19 @@ function FindCarrierContent() {
         </button>
       </div>
 
-      {/* Advanced Filters Panel */}
+      {/* ADDED BACK THE FILTERS SECTION THAT WAS MISSING */}
       {showFilters && (
         <div className={styles.filtersPanel}>
           <div className={styles.filterGroup}>
             <label>Max Price: ${priceRange}</label>
             <input
               type="range"
-              min="0"
-              max="1000"
+              min="50"
+              max="5000"
+              step="50"
               value={priceRange}
               onChange={(e) => setPriceRange(Number(e.target.value))}
-              className={styles.rangeInput}
+              className={styles.priceSlider}
             />
           </div>
           <div className={styles.filterGroup}>
@@ -129,100 +135,54 @@ function FindCarrierContent() {
             <select
               value={selectedTransport}
               onChange={(e) => setSelectedTransport(e.target.value)}
-              className={styles.selectInput}
+              className={styles.transportSelect}
             >
               <option value="All">All Types</option>
-              <option value="Flight">Flight</option>
-              <option value="Train">Train</option>
               <option value="Car">Car</option>
-              <option value="Ship">Ship</option>
+              <option value="Van">Van</option>
+              <option value="Truck">Truck</option>
+              <option value="Motorcycle">Motorcycle</option>
             </select>
           </div>
-          <button
-            onClick={() => {
-              setPriceRange(1000);
-              setSelectedTransport("All");
-            }}
-            className={styles.clearFiltersBtn}
-            title="Reset all filters"
-          >
-            <i className="fa-solid fa-rotate-right"></i>
-          </button>
         </div>
       )}
 
       <h2 className={styles.sectionTitle}>Available Carriers</h2>
       <p className={styles.resultCount}>{filteredCarriers.length} carriers found</p>
 
-      {filteredCarriers.length === 0 ? (
-        <div className={styles.emptyState}>
-          <div className={styles.emptyIcon}>📦</div>
-          <h3 className={styles.emptyTitle}>No trips found</h3>
-          <p className={styles.emptyText}>
-            Try adjusting your search or filters.
-          </p>
-          <button
-            onClick={() => {
-              setPriceRange(1000);
-              setSelectedTransport("All");
-            }}
-            className={styles.clearBtn}
-          >
-            Clear Filters
-          </button>
-        </div>
-      ) : (
-        <div className={viewMode === "grid" ? styles.cardsGrid : styles.cardsList}>
-          {filteredCarriers.map((carrier) => {
-            const isMyTrip = user && carrier.carrierUid === user.uid;
-            return (
-              <div key={carrier.id} className={`${styles.card} ${viewMode === 'list' ? styles.cardList : ''}`}>
-                <div className={styles.cardHeader}>
-                  <div className={styles.avatar}>{carrier.avatar || carrier.userName?.charAt(0) || 'U'}</div>
-                  <div className={styles.headerInfo}>
-                    <h3 className={styles.cardName}>
-                      {carrier.carrierName || carrier.userName || carrier.name || 'Carrier'}
-                      {isMyTrip && <span className={styles.youBadge}>(You)</span>}
-                    </h3>
-                    <div className={styles.routeInfo}>
-                      <span className={styles.routeText}>{carrier.from} → {carrier.to}</span>
-                      <span className={styles.cardDate}>
-                        <i className="fa-regular fa-calendar" style={{ marginRight: '5px' }}></i>
-                        {carrier.date   ? (carrier.date?.toDate ? carrier.date.toDate() : new Date(carrier.date)).toLocaleDateString()   : "Date"}
-                      </span>
-                    </div>
-                  </div>
-                  <span className={styles.badge}>{carrier.transportType}</span>
-                </div>
+      <div className={viewMode === "grid" ? styles.cardsGrid : styles.cardsList}>
+        {filteredCarriers.map((carrier) => {
+          const isMyTrip = user && carrier.carrierUid === user.uid;
 
-                <div className={styles.cardBody}>
-                  <p className={styles.packageSize}>
-                    <i className="fa-solid fa-box"></i> {carrier.packageSize}
-                  </p>
-                  {carrier.description && (
-                    <p className={styles.description}>
-                      {carrier.description}
-                    </p>
-                  )}
+          return (
+            <div key={carrier.id} className={styles.card}>
+              <div className={styles.cardHeader}>
+                <div className={styles.avatar}>
+                  {carrier.carrierName?.charAt(0) || "U"}
                 </div>
-
-                <div className={styles.cardFooter}>
-                  <h3 className={styles.price}>${carrier.price}</h3>
-                  {isMyTrip ? (
-                    <button disabled className={styles.bookBtnDisabled}>
-                      Your Trip
-                    </button>
-                  ) : (
-                    <Link href={`/booking?tripId=${carrier.id}`} className={styles.bookBtn}>
-                      Book Now
-                    </Link>
-                  )}
-                </div>
+                <h3 className={styles.cardName}>
+                  {carrier.carrierName || "Carrier"}
+                  {isMyTrip && <span className={styles.youBadge}>(You)</span>}
+                </h3>
+                <span className={styles.badge}>{carrier.transportType}</span>
               </div>
-            );
-          })}
-        </div>
-      )}
+
+              <div className={styles.cardFooter}>
+                <h3 className={styles.price}>${carrier.price}</h3>
+                {isMyTrip ? (
+                  <button disabled className={styles.bookBtnDisabled}>
+                    Your Trip
+                  </button>
+                ) : (
+                  <Link href={`/booking?tripId=${carrier.id}`} className={styles.bookBtn}>
+                    Book Now
+                  </Link>
+                )}
+              </div>
+            </div>
+          );
+        })}
+      </div>
     </>
   );
 }
