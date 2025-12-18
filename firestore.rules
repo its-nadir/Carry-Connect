@@ -25,6 +25,12 @@ service cloud.firestore {
       allow delete: if isOwner(userId);
     }
 
+    function isValidTrip(data) {
+      return data.price is number && data.price > 0 
+          && data.from is string && data.from.size() > 0
+          && data.to is string && data.to.size() > 0;
+    }
+
     // Trips Collection
     match /trips/{tripId} {
       // Anyone can search/view trips
@@ -34,14 +40,15 @@ service cloud.firestore {
       // New trip must have the creator's UID as carrierUid
       allow create: if isAuthenticated() 
                    && request.resource.data.carrierUid == request.auth.uid
-                   && request.resource.data.status == 'available';
+                   && request.resource.data.status == 'available'
+                   && isValidTrip(request.resource.data);
 
       // Updates are complex:
       // 1. Owner can update details (from, to, price, etc.)
       // 2. A shipper can BOOK the trip (update status to 'booked')
       allow update: if isAuthenticated() && (
         // Case 1: Carrier updating their own trip
-        (isTripOwner(resource) && request.resource.data.carrierUid == request.auth.uid) ||
+        (isTripOwner(resource) && request.resource.data.carrierUid == request.auth.uid && isValidTrip(request.resource.data)) ||
         
         // Case 2: Shipper booking the trip
         (
@@ -50,7 +57,9 @@ service cloud.firestore {
           request.resource.data.bookedByUid == request.auth.uid && // Claiming it
           // Ensure they don't change the carrier or trip details, only booking fields
           request.resource.data.carrierUid == resource.data.carrierUid && 
-          request.resource.data.price == resource.data.price
+          request.resource.data.price == resource.data.price &&
+          // Validate booking data
+          (request.resource.data.weight == null || (request.resource.data.weight is number && request.resource.data.weight > 0))
         )
       );
 
