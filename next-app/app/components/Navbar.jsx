@@ -9,7 +9,8 @@ export default function Navbar() {
   const router = useRouter()
   const [user, setUser] = useState(null)
   const [loading, setLoading] = useState(true)
-  const [hasUnread, setHasUnread] = useState(false)
+  const [hasUnreadMessages, setHasUnreadMessages] = useState(false)
+  const [hasUnreadNotifications, setHasUnreadNotifications] = useState(false)
   const [trackedTripIds, setTrackedTripIds] = useState([])
 
   useEffect(() => {
@@ -30,7 +31,8 @@ export default function Navbar() {
 
   useEffect(() => {
     if (!user) {
-      setHasUnread(false)
+      setHasUnreadMessages(false)
+      setHasUnreadNotifications(false)
       setTrackedTripIds([])
       return
     }
@@ -55,20 +57,17 @@ export default function Navbar() {
       if (typeof ts === "number") return ts
       if (ts?.toMillis) return ts.toMillis()
       if (ts?.toDate) return ts.toDate().getTime()
-      const d = new Date(ts)
-      const t = d.getTime()
-      return Number.isFinite(t) ? t : 0
-    }
-
-    const recomputeHasUnread = () => {
-      const anyUnread = Object.values(unreadMap).some(Boolean)
-      setHasUnread(anyUnread)
+      return new Date(ts).getTime()
     }
 
     async function initUnread() {
       try {
-        const { getUserTrips, getUserOrders, listenToTripLastMessage } =
-          await import("../../lib/db")
+        const {
+          getUserTrips,
+          getUserOrders,
+          listenToTripLastMessage,
+          listenToNotifications
+        } = await import("../../lib/db")
 
         const postedTrips = await getUserTrips(user.uid)
         const bookedOrders = await getUserOrders(user.uid)
@@ -82,30 +81,28 @@ export default function Navbar() {
 
         unsubs = uniqueTripIds.map((tripId) =>
           listenToTripLastMessage(tripId, (msg) => {
-            if (!mounted) return
-
-            if (!msg) {
-              unreadMap[tripId] = false
-              recomputeHasUnread()
-              return
-            }
+            if (!mounted || !msg) return
 
             const msgTime = toMillis(msg.sentAt)
             const lastSeen = getLastSeen(user.uid, tripId)
 
-            if (msg.senderUid && msg.senderUid !== user.uid && msgTime > lastSeen) {
+            if (msg.senderUid !== user.uid && msgTime > lastSeen) {
               unreadMap[tripId] = true
             } else {
               unreadMap[tripId] = false
             }
 
-            recomputeHasUnread()
+            setHasUnreadMessages(Object.values(unreadMap).some(Boolean))
           })
         )
-      } catch {
-        setHasUnread(false)
-        setTrackedTripIds([])
-      }
+
+        const unsubNotifications = listenToNotifications((notifs) => {
+          const hasUnread = notifs.some((n) => !n.isRead)
+          setHasUnreadNotifications(hasUnread)
+        })
+
+        unsubs.push(unsubNotifications)
+      } catch {}
     }
 
     initUnread()
@@ -121,71 +118,71 @@ export default function Navbar() {
     router.push("/")
   }
 
-  const handleOpenMessages = (e) => {
+  const openMessages = () => {
     if (!user) return
-    try {
-      const now = Date.now()
-      trackedTripIds.forEach((tripId) => {
-        localStorage.setItem(`cc_seen_${user.uid}_${tripId}`, String(now))
-      })
-    } catch {}
-    setHasUnread(false)
+    const now = Date.now()
+    trackedTripIds.forEach((tripId) => {
+      localStorage.setItem(`cc_seen_${user.uid}_${tripId}`, String(now))
+    })
+    setHasUnreadMessages(false)
     router.push("/messages")
   }
 
+  const openNotifications = () => {
+    router.push("/notifications")
+  }
+
   return (
-    <>
-      <nav className="navbar cc-navbar">
-        <div className="navbar-left">
-          <Link href="/" className="logo cc-logo">
-            <span className="cc-logoMark">
-              <Image src="/favicon.ico" alt="CarryConnect" width={18} height={18} />
-            </span>
-            <span className="cc-brandText">CarryConnect</span>
-          </Link>
-        </div>
+    <nav className="navbar cc-navbar">
+      <div className="navbar-left">
+        <Link href="/" className="logo cc-logo">
+          <span className="cc-logoMark">
+            <Image src="/favicon.ico" alt="CarryConnect" width={18} height={18} />
+          </span>
+          <span className="cc-brandText">CarryConnect</span>
+        </Link>
+      </div>
 
-        <div className="navbar-center">
-          <Link href="/find-a-carrier">Find a Carrier</Link>
-          <Link href="/add-trip">Add Trip</Link>
-          {user && (
-            <>
-              <Link href="/my-trips">My Trips</Link>
-              <Link href="/my-orders">My Orders</Link>
-            </>
-          )}
-        </div>
+      <div className="navbar-center">
+        <Link href="/find-a-carrier">Find a Carrier</Link>
+        <Link href="/add-trip">Add Trip</Link>
+        {user && (
+          <>
+            <Link href="/my-trips">My Trips</Link>
+            <Link href="/my-orders">My Orders</Link>
+          </>
+        )}
+      </div>
 
-        <div className="navbar-right">
-          {user ? (
-            <>
-              <button
-                type="button"
-                onClick={handleOpenMessages}
-                className="icon-wrap cc-iconBtn"
-                style={{ border: "none", background: "transparent" }}
-              >
-                <i className="fa-regular fa-comments icon"></i>
-                {hasUnread && <span className="icon-badge"></span>}
-              </button>
+      <div className="navbar-right">
+        {user ? (
+          <>
+            <button className="icon-wrap cc-iconBtn" onClick={openNotifications}>
+              <i className="fa-regular fa-bell icon"></i>
+              {hasUnreadNotifications && <span className="icon-badge"></span>}
+            </button>
 
-              <Link href="/profile" className="icon-wrap cc-iconBtn">
-                <i className="fa-regular fa-user icon"></i>
-              </Link>
+            <button className="icon-wrap cc-iconBtn" onClick={openMessages}>
+              <i className="fa-regular fa-comments icon"></i>
+              {hasUnreadMessages && <span className="icon-badge"></span>}
+            </button>
 
-              <button onClick={handleLogout} className="add-trip-btn" style={{ background: "#ef4444" }}>
-                Logout
-              </button>
-            </>
-          ) : (
-            !loading && (
-              <Link href="/auth" className="add-trip-btn">
-                Login / Sign Up
-              </Link>
-            )
-          )}
-        </div>
-      </nav>
-    </>
+            <Link href="/profile" className="icon-wrap cc-iconBtn">
+              <i className="fa-regular fa-user icon"></i>
+            </Link>
+
+            <button onClick={handleLogout} className="add-trip-btn" style={{ background: "#ef4444" }}>
+              Logout
+            </button>
+          </>
+        ) : (
+          !loading && (
+            <Link href="/auth" className="add-trip-btn">
+              Login / Sign Up
+            </Link>
+          )
+        )}
+      </div>
+    </nav>
   )
 }
