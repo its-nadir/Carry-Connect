@@ -19,7 +19,9 @@ export default function MessagesPage() {
   const [conversations, setConversations] = useState([]);
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
+
   const messagesEndRef = useRef(null);
+  const shouldAutoScrollRef = useRef(true);
 
   useEffect(() => {
     const unsubscribeAuth = onAuthChange((currentUser) => {
@@ -100,7 +102,6 @@ export default function MessagesPage() {
             if (c.tripId !== chat.tripId) return c;
 
             const lastSeen = getLastSeen(user.uid, chat.tripId);
-
             const msgTime = msg?.sentAt?.toMillis
               ? msg.sentAt.toMillis()
               : 0;
@@ -150,16 +151,20 @@ export default function MessagesPage() {
   }, [selectedTripId]);
 
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    if (shouldAutoScrollRef.current) {
+      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    }
   }, [messages]);
 
   const openChat = (tripId) => {
     if (user) setLastSeen(user.uid, tripId, Date.now());
+    shouldAutoScrollRef.current = true;
     setSelectedTripId(tripId);
   };
 
   const send = () => {
     if (!input.trim() || !selectedTripId) return;
+    shouldAutoScrollRef.current = true;
     sendTripMessage(input);
     setInput("");
   };
@@ -189,7 +194,6 @@ export default function MessagesPage() {
                       : styles.chatItem
                   }
                   onClick={() => openChat(chat.tripId)}
-                  style={{ cursor: "pointer" }}
                 >
                   <div className={styles.chatAvatar}>{chat.avatar}</div>
                   <div className={styles.chatInfo}>
@@ -206,14 +210,6 @@ export default function MessagesPage() {
                       {chat.lastMessage}
                     </p>
                   </div>
-                  <p className={styles.chatTime}>
-                    {chat.lastMessageAt
-                      ? new Date(chat.lastMessageAt.toDate()).toLocaleTimeString([], {
-                          hour: "2-digit",
-                          minute: "2-digit"
-                        })
-                      : ""}
-                  </p>
                 </div>
               ))
             )
@@ -238,43 +234,26 @@ export default function MessagesPage() {
               </div>
 
               <div className={styles.messages}>
-                {messages.length === 0 ? (
-                  <div className={styles.emptyState}>
-                    Start the conversation
-                  </div>
-                ) : (
-                  messages.map((m) => (
+                {messages.map((m) => (
+                  <div
+                    key={m.id}
+                    className={
+                      m.senderUid === auth?.currentUser?.uid
+                        ? styles.msgBoxRight
+                        : styles.msgBox
+                    }
+                  >
                     <div
-                      key={m.id}
                       className={
                         m.senderUid === auth?.currentUser?.uid
-                          ? styles.msgBoxRight
-                          : styles.msgBox
+                          ? styles.msgBubbleBlue
+                          : styles.msgBubbleGray
                       }
                     >
-                      <span
-                        className={
-                          m.senderUid === auth?.currentUser?.uid
-                            ? styles.msgSenderRight
-                            : styles.msgSender
-                        }
-                      >
-                        {m.senderUid === auth?.currentUser?.uid
-                          ? "You"
-                          : m.sender?.[0]}
-                      </span>
-                      <div
-                        className={
-                          m.senderUid === auth?.currentUser?.uid
-                            ? styles.msgBubbleBlue
-                            : styles.msgBubbleGray
-                        }
-                      >
-                        {m.text}
-                      </div>
+                      {m.text}
                     </div>
-                  ))
-                )}
+                  </div>
+                ))}
                 <div ref={messagesEndRef} />
               </div>
 
