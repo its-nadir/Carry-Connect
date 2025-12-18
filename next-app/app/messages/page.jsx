@@ -38,18 +38,6 @@ function MessagesContent() {
   }, [searchParams, selectedTripId]);
 
   useEffect(() => {
-    const onPop = () => {
-      try {
-        const params = new URLSearchParams(window.location.search);
-        const id = params.get("tripId");
-        setSelectedTripId(id);
-      } catch {}
-    };
-    window.addEventListener("popstate", onPop);
-    return () => window.removeEventListener("popstate", onPop);
-  }, []);
-
-  useEffect(() => {
     if (!user) {
       setConversations([]);
       return;
@@ -104,13 +92,14 @@ function MessagesContent() {
     } catch {}
   };
 
+  /* ================= LAST MESSAGE LISTENER ================= */
   useEffect(() => {
     if (!user || conversations.length === 0) return;
 
     const unsubs = conversations.map(chat =>
       listenToTripLastMessage(chat.tripId, msg => {
-        setConversations(prev =>
-          prev.map(c => {
+        setConversations(prev => {
+          const updated = prev.map(c => {
             if (c.tripId !== chat.tripId) return c;
 
             const msgTime =
@@ -118,11 +107,7 @@ function MessagesContent() {
                 ? msg.sentAt.toMillis()
                 : 0;
 
-            const isOpenChat = selectedTripId && selectedTripId === chat.tripId;
-
-            if (isOpenChat && msg && msg.senderUid !== user.uid && msgTime) {
-              setLastSeen(user.uid, chat.tripId, msgTime);
-            }
+            const isOpenChat = selectedTripId === chat.tripId;
 
             const unread =
               !isOpenChat &&
@@ -134,46 +119,53 @@ function MessagesContent() {
               ...c,
               lastMessage: msg?.text || "Tap to open chat...",
               lastMessageAt: msg?.sentAt || null,
-              unread: Boolean(unread)
+              unread
             };
-          })
-        );
+          });
+
+          /* 🔥 FIX 2: move updated chat to TOP */
+          const idx = updated.findIndex(c => c.tripId === chat.tripId);
+          if (idx > 0) {
+            const [item] = updated.splice(idx, 1);
+            updated.unshift(item);
+          }
+
+          return updated;
+        });
       })
     );
 
     return () => unsubs.forEach(u => u && u());
   }, [user, conversations.length, selectedTripId]);
 
+  /* ================= CHAT LISTENER ================= */
   useEffect(() => {
-    if (!selectedTripId) return;
+    if (!selectedTripId || !user) return;
 
     setCurrentTripId(selectedTripId);
 
     const unsub = listenToTripChat(msgs => {
       setMessages(msgs);
 
-      if (user) {
-        const lastMsg = msgs && msgs.length ? msgs[msgs.length - 1] : null;
-        const lastTime =
-          lastMsg?.sentAt && typeof lastMsg.sentAt.toMillis === "function"
-            ? lastMsg.sentAt.toMillis()
-            : Date.now();
+      const lastMsg = msgs[msgs.length - 1];
+      const lastTime =
+        lastMsg?.sentAt && typeof lastMsg.sentAt.toMillis === "function"
+          ? lastMsg.sentAt.toMillis()
+          : Date.now();
 
-        setLastSeen(user.uid, selectedTripId, lastTime);
+      /* 🔥 FIX 1: mark seen ONLY because user is INSIDE chat */
+      setLastSeen(user.uid, selectedTripId, lastTime);
 
-        setConversations(prev =>
-          prev.map(c =>
-            c.tripId === selectedTripId ? { ...c, unread: false } : c
-          )
-        );
-      }
+      setConversations(prev =>
+        prev.map(c =>
+          c.tripId === selectedTripId ? { ...c, unread: false } : c
+        )
+      );
 
       requestAnimationFrame(() => {
-        if (messagesBoxRef.current) {
-          messagesBoxRef.current.scrollTo({
-            top: messagesBoxRef.current.scrollHeight
-          });
-        }
+        messagesBoxRef.current?.scrollTo({
+          top: messagesBoxRef.current.scrollHeight
+        });
       });
     });
 
@@ -185,19 +177,8 @@ function MessagesContent() {
 
   const openChat = tripId => {
     if (tripId === selectedTripId) return;
-
-    if (user) setLastSeen(user.uid, tripId);
-
     setSelectedTripId(tripId);
-
-    setConversations(prev =>
-      prev.map(c => (c.tripId === tripId ? { ...c, unread: false } : c))
-    );
-
-    try {
-      const url = `/messages?tripId=${tripId}`;
-      window.history.pushState(null, "", url);
-    } catch {}
+    window.history.pushState(null, "", `/messages?tripId=${tripId}`);
   };
 
   const send = () => {
@@ -276,12 +257,10 @@ function MessagesContent() {
                         }
                       >
                         <div className={styles.msgText}>{m.text}</div>
-
                         <div className={styles.msgMeta}>
                           <span className={styles.msgClock}>
                             {formatTime(m.sentAt)}
                           </span>
-
                           {isMine && (
                             <span
                               className={
