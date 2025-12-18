@@ -467,5 +467,21 @@ export async function getConversations(userId) {
   const snap = await getDocs(q);
   return snap.docs.map(d => ({ id: d.id, ...d.data() }));
 }
+export const markTripRead = async (tripId) => {
+  if (!auth.currentUser || !tripId) return;
+  try {
+    await updateDoc(doc(db, "trips", tripId), {
+      [`readAt.${auth.currentUser.uid}`]: serverTimestamp()
+    });
+  } catch {}
+};
+
+export const listenToTripReadAt = (tripId, callback) => {
+  if (!tripId) return () => {};
+  return onSnapshot(doc(db, "trips", tripId), (snap) => {
+    const data = snap.exists() ? snap.data() : null;
+    callback(data?.readAt || {});
+  });
+};
 
 console.log("CarryConnect db.js loaded");
