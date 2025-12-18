@@ -159,12 +159,18 @@ export const getTrip = async (tripId) => {
 };
 
 export const listenToAvailableTrips = (filters = {}, callback) => {
+  if (typeof filters === "function") {
+    callback = filters;
+    filters = {};
+  }
+
+  if (typeof callback !== "function") {
+    return () => {};
+  }
+
   let q = query(collection(db, "trips"), where("status", "==", "available"));
 
   if (filters.from) {
-    // Basic normalization: Assuming case-sensitive matching or exact strings stored in DB.
-    // For a real production app, you'd want a normalized 'from_lower' field in DB.
-    // Here we trust the exact match for now as per instructions to keep it simple but professional.
     q = query(q, where("from", "==", filters.from));
   }
 
@@ -173,15 +179,12 @@ export const listenToAvailableTrips = (filters = {}, callback) => {
   }
 
   if (filters.date) {
-    // Filter trips on or after the selected date
     const startOfDay = new Date(filters.date);
     startOfDay.setHours(0, 0, 0, 0);
     q = query(q, where("date", ">=", startOfDay));
-    // When ordering by date or filtering by inequality, we usually want to order by date
     q = query(q, orderBy("date", "asc"));
   }
 
-  // Transport Type filter (Server-side)
   if (filters.transportType && filters.transportType !== "All") {
     q = query(q, where("transportType", "==", filters.transportType));
   }
