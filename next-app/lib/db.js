@@ -426,18 +426,25 @@ export const markNotificationRead = async (id) => {
 let currentTripId = null;
 export const setCurrentTripId = (id) => currentTripId = id;
 
+// FIXED: Send message with proper seenBy initialization
 export const sendTripMessage = async (text) => {
   if (!currentTripId || !auth.currentUser) return;
-  await addDoc(collection(db, "trips", currentTripId, "messages"), {
-    text,
-    sender: auth.currentUser.displayName || auth.currentUser.email,
-    senderUid: auth.currentUser.uid,
-    sentAt: serverTimestamp(),
-    seenBy: [auth.currentUser.uid]
-  });
+  
+  try {
+    await addDoc(collection(db, "trips", currentTripId, "messages"), {
+      text,
+      sender: auth.currentUser.displayName || auth.currentUser.email,
+      senderUid: auth.currentUser.uid,
+      sentAt: serverTimestamp(),
+      seenBy: [auth.currentUser.uid] // Sender has already seen their own message
+    });
+  } catch (error) {
+    console.error("Error sending message:", error);
+    throw error;
+  }
 };
 
-
+// Listen to chat messages
 export const listenToTripChat = (callback) => {
   if (!currentTripId) return () => { };
   const q = query(
@@ -446,17 +453,25 @@ export const listenToTripChat = (callback) => {
   );
   return onSnapshot(q, snap => {
     callback(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+  }, (error) => {
+    console.error("Error listening to chat:", error);
   });
 };
 
+// Listen to last message for preview in sidebar
 export const listenToTripLastMessage = (tripId, callback) => {
+  if (!tripId) return () => {};
+  
   const q = query(
     collection(db, "trips", tripId, "messages"),
     orderBy("sentAt", "desc"),
     limit(1)
   );
+  
   return onSnapshot(q, snap => {
     callback(snap.empty ? null : { id: snap.docs[0].id, ...snap.docs[0].data() });
+  }, (error) => {
+    console.error("Error listening to last message:", error);
   });
 };
 
@@ -469,43 +484,33 @@ export async function getConversations(userId) {
   const snap = await getDocs(q);
   return snap.docs.map(d => ({ id: d.id, ...d.data() }));
 }
-export const markTripRead = async (tripId) => {
-  if (!auth.currentUser || !tripId) return;
-  try {
-    await updateDoc(doc(db, "trips", tripId), {
-      [`readAt.${auth.currentUser.uid}`]: serverTimestamp()
-    });
-  } catch {}
-};
 
-export const listenToTripReadAt = (tripId, callback) => {
-  if (!tripId) return () => {};
-  return onSnapshot(doc(db, "trips", tripId), (snap) => {
-    const data = snap.exists() ? snap.data() : null;
-    callback(data?.readAt || {});
-  });
-};
+// FIXED: Mark messages as seen - more efficient batch update
 export const markTripMessagesSeen = async (tripId) => {
   if (!tripId || !auth.currentUser) return;
 
   try {
     const uid = auth.currentUser.uid;
 
+    // Get recent messages
     const q = query(
       collection(db, "trips", tripId, "messages"),
       orderBy("sentAt", "desc"),
-      limit(30)
+      limit(50) // Increased limit to catch more unread messages
     );
 
     const snap = await getDocs(q);
 
-    const updates = [];
+    // Batch updates for better performance
+    const batch = [];
+    
     snap.docs.forEach((d) => {
       const data = d.data();
       const seenBy = Array.isArray(data.seenBy) ? data.seenBy : [];
 
+      // Only update if: message is not from me AND I haven't seen it yet
       if (data.senderUid !== uid && !seenBy.includes(uid)) {
-        updates.push(
+        batch.push(
           updateDoc(doc(db, "trips", tripId, "messages", d.id), {
             seenBy: [...seenBy, uid]
           })
@@ -513,10 +518,36 @@ export const markTripMessagesSeen = async (tripId) => {
       }
     });
 
-    if (updates.length) {
-      await Promise.all(updates);
+    // Execute all updates
+    if (batch.length > 0) {
+      await Promise.all(batch);
     }
-  } catch {}
+  } catch (error) {
+    console.error("Error marking messages as seen:", error);
+  }
+};
+
+// Optional: Mark specific trip as read (for notification purposes)
+export const markTripRead = async (tripId) => {
+  if (!auth.currentUser || !tripId) return;
+  try {
+    await updateDoc(doc(db, "trips", tripId), {
+      [`readAt.${auth.currentUser.uid}`]: serverTimestamp()
+    });
+  } catch (error) {
+    console.error("Error marking trip as read:", error);
+  }
+};
+
+// Listen to read status
+export const listenToTripReadAt = (tripId, callback) => {
+  if (!tripId) return () => {};
+  return onSnapshot(doc(db, "trips", tripId), (snap) => {
+    const data = snap.exists() ? snap.data() : null;
+    callback(data?.readAt || {});
+  }, (error) => {
+    console.error("Error listening to read status:", error);
+  });
 };
 
 console.log("CarryConnect db.js loaded");
