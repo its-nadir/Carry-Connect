@@ -1,188 +1,159 @@
-"use client"
+/* Notification Dropdown Styles */
+.notification-container {
+  position: relative;
+  display: inline-block;
+}
 
-import { useState, useEffect } from "react"
-import Link from "next/link"
-import Image from "next/image"
-import { useRouter } from "next/navigation"
+.notifications-dropdown {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  width: 350px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+  margin-top: 10px;
+  z-index: 1000;
+  overflow: hidden;
+  border: 1px solid #e5e7eb;
+}
 
-export default function Navbar() {
-  const router = useRouter()
-  const [user, setUser] = useState(null)
-  const [loading, setLoading] = useState(true)
-  const [hasUnreadMessages, setHasUnreadMessages] = useState(false)
-  const [hasUnreadNotifications, setHasUnreadNotifications] = useState(false)
-  const [trackedTripIds, setTrackedTripIds] = useState([])
+.notifications-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px;
+  border-bottom: 1px solid #e5e7eb;
+  background: #f9fafb;
+}
 
-  useEffect(() => {
-    async function checkAuth() {
-      try {
-        const { onAuthChange } = await import("../../lib/auth")
-        const unsubscribe = onAuthChange((currentUser) => {
-          setUser(currentUser)
-          setLoading(false)
-        })
-        return () => unsubscribe()
-      } catch {
-        setLoading(false)
-      }
-    }
-    checkAuth()
-  }, [])
+.notifications-header h3 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #111827;
+}
 
-  useEffect(() => {
-    if (!user) {
-      setHasUnreadMessages(false)
-      setHasUnreadNotifications(false)
-      setTrackedTripIds([])
-      return
-    }
+.notifications-header a {
+  font-size: 14px;
+  color: #3b82f6;
+  text-decoration: none;
+  font-weight: 500;
+}
 
-    let mounted = true
-    let unsubs = []
-    const unreadMap = {}
+.notifications-header a:hover {
+  text-decoration: underline;
+}
 
-    const getSeenKey = (uid, tripId) => `cc_seen_${uid}_${tripId}`
+.notifications-list {
+  max-height: 400px;
+  overflow-y: auto;
+}
 
-    const getLastSeen = (uid, tripId) => {
-      try {
-        const raw = localStorage.getItem(getSeenKey(uid, tripId))
-        return raw ? Number(raw) : 0
-      } catch {
-        return 0
-      }
-    }
+.notification-item {
+  display: flex;
+  align-items: flex-start;
+  padding: 12px 16px;
+  cursor: pointer;
+  border-bottom: 1px solid #f3f4f6;
+  position: relative;
+  transition: background-color 0.2s;
+}
 
-    const toMillis = (ts) => {
-      if (!ts) return 0
-      if (typeof ts === "number") return ts
-      if (ts?.toMillis) return ts.toMillis()
-      if (ts?.toDate) return ts.toDate().getTime()
-      return new Date(ts).getTime()
-    }
+.notification-item:hover {
+  background-color: #f9fafb;
+}
 
-    async function initUnread() {
-      try {
-        const {
-          getUserTrips,
-          getUserOrders,
-          listenToTripLastMessage,
-          listenToNotifications
-        } = await import("../../lib/db")
+.notification-item.unread {
+  background-color: #f0f9ff;
+}
 
-        const postedTrips = await getUserTrips(user.uid)
-        const bookedOrders = await getUserOrders(user.uid)
+.notification-item.unread:hover {
+  background-color: #e0f2fe;
+}
 
-        const trips = [...postedTrips, ...bookedOrders].filter(
-          (t) => t.status === "booked"
-        )
+.notification-icon {
+  margin-right: 12px;
+  color: #6b7280;
+  font-size: 18px;
+  margin-top: 2px;
+}
 
-        const uniqueTripIds = Array.from(new Set(trips.map((t) => t.id)))
-        setTrackedTripIds(uniqueTripIds)
+.notification-content {
+  flex: 1;
+}
 
-        unsubs = uniqueTripIds.map((tripId) =>
-          listenToTripLastMessage(tripId, (msg) => {
-            if (!mounted || !msg) return
+.notification-message {
+  margin: 0 0 4px 0;
+  font-size: 14px;
+  color: #111827;
+  line-height: 1.4;
+}
 
-            const msgTime = toMillis(msg.sentAt)
-            const lastSeen = getLastSeen(user.uid, tripId)
+.notification-time {
+  font-size: 12px;
+  color: #6b7280;
+}
 
-            if (msg.senderUid !== user.uid && msgTime > lastSeen) {
-              unreadMap[tripId] = true
-            } else {
-              unreadMap[tripId] = false
-            }
+.unread-dot {
+  width: 8px;
+  height: 8px;
+  background-color: #3b82f6;
+  border-radius: 50%;
+  margin-left: 8px;
+  margin-top: 6px;
+}
 
-            setHasUnreadMessages(Object.values(unreadMap).some(Boolean))
-          })
-        )
+.no-notifications {
+  padding: 32px 16px;
+  text-align: center;
+  color: #6b7280;
+}
 
-        const unsubNotifications = listenToNotifications((notifs) => {
-          const hasUnread = notifs.some((n) => !n.isRead)
-          setHasUnreadNotifications(hasUnread)
-        })
+.no-notifications i {
+  font-size: 32px;
+  margin-bottom: 12px;
+  color: #d1d5db;
+}
 
-        unsubs.push(unsubNotifications)
-      } catch {}
-    }
+.no-notifications p {
+  margin: 0;
+  font-size: 14px;
+}
 
-    initUnread()
-    return () => {
-      mounted = false
-      unsubs.forEach((u) => u && u())
-    }
-  }, [user])
+.notifications-footer {
+  padding: 12px 16px;
+  text-align: center;
+  border-top: 1px solid #e5e7eb;
+  background: #f9fafb;
+}
 
-  const handleLogout = async () => {
-    const { logOut } = await import("../../lib/auth")
-    await logOut()
-    router.push("/")
-  }
+.notifications-footer a {
+  font-size: 14px;
+  color: #3b82f6;
+  text-decoration: none;
+  font-weight: 500;
+}
 
-  const openMessages = () => {
-    if (!user) return
-    const now = Date.now()
-    trackedTripIds.forEach((tripId) => {
-      localStorage.setItem(`cc_seen_${user.uid}_${tripId}`, String(now))
-    })
-    setHasUnreadMessages(false)
-    router.push("/messages")
-  }
+.notifications-footer a:hover {
+  text-decoration: underline;
+}
 
-  const openNotifications = () => {
-    router.push("/notifications")
-  }
+/* Scrollbar styling */
+.notifications-list::-webkit-scrollbar {
+  width: 6px;
+}
 
-  return (
-    <nav className="navbar cc-navbar">
-      <div className="navbar-left">
-        <Link href="/" className="logo cc-logo">
-          <span className="cc-logoMark">
-            <Image src="/favicon.ico" alt="CarryConnect" width={18} height={18} />
-          </span>
-          <span className="cc-brandText">CarryConnect</span>
-        </Link>
-      </div>
+.notifications-list::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 3px;
+}
 
-      <div className="navbar-center">
-        <Link href="/find-a-carrier">Find a Carrier</Link>
-        <Link href="/add-trip">Add Trip</Link>
-        {user && (
-          <>
-            <Link href="/my-trips">My Trips</Link>
-            <Link href="/my-orders">My Orders</Link>
-          </>
-        )}
-      </div>
+.notifications-list::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 3px;
+}
 
-      <div className="navbar-right">
-        {user ? (
-          <>
-            <button className="icon-wrap cc-iconBtn" onClick={openNotifications}>
-              <i className="fa-regular fa-bell icon"></i>
-              {hasUnreadNotifications && <span className="icon-badge"></span>}
-            </button>
-
-            <button className="icon-wrap cc-iconBtn" onClick={openMessages}>
-              <i className="fa-regular fa-comments icon"></i>
-              {hasUnreadMessages && <span className="icon-badge"></span>}
-            </button>
-
-            <Link href="/profile" className="icon-wrap cc-iconBtn">
-              <i className="fa-regular fa-user icon"></i>
-            </Link>
-
-            <button onClick={handleLogout} className="add-trip-btn" style={{ background: "#ef4444" }}>
-              Logout
-            </button>
-          </>
-        ) : (
-          !loading && (
-            <Link href="/auth" className="add-trip-btn">
-              Login / Sign Up
-            </Link>
-          )
-        )}
-      </div>
-    </nav>
-  )
+.notifications-list::-webkit-scrollbar-thumb:hover {
+  background: #a1a1a1;
 }
