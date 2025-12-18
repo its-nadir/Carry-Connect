@@ -25,6 +25,7 @@ function MessagesContent() {
   const [input, setInput] = useState("");
 
   const messagesBoxRef = useRef(null);
+  const lastMessageCountRef = useRef(0);
 
   const toMillisSafe = (ts) => {
     if (!ts) return 0;
@@ -32,6 +33,22 @@ function MessagesContent() {
     if (typeof ts.toDate === "function") return ts.toDate().getTime();
     const d = new Date(ts);
     return isNaN(d.getTime()) ? 0 : d.getTime();
+  };
+
+  // Scroll to bottom when new messages arrive
+  const scrollToBottom = (force = false) => {
+    if (messagesBoxRef.current) {
+      const { scrollTop, scrollHeight, clientHeight } = messagesBoxRef.current;
+      const isNearBottom = scrollHeight - scrollTop - clientHeight < 100;
+      
+      if (force || isNearBottom) {
+        requestAnimationFrame(() => {
+          if (messagesBoxRef.current) {
+            messagesBoxRef.current.scrollTop = messagesBoxRef.current.scrollHeight;
+          }
+        });
+      }
+    }
   };
 
   useEffect(() => {
@@ -46,6 +63,7 @@ function MessagesContent() {
     }
   }, [searchParams, selectedTripId]);
 
+  // Fetch conversations
   useEffect(() => {
     if (!user) {
       setConversations([]);
@@ -70,13 +88,14 @@ function MessagesContent() {
           name: otherName,
           otherUid,
           route: `${trip.from} → ${trip.to}`,
-          lastMessage: "Tap to open chat...",
+          lastMessage: "No messages yet",
           lastMessageAt: null,
           unread: false,
           avatar: otherName?.[0]?.toUpperCase() || "?"
         };
       });
 
+      // Remove duplicates
       const unique = Array.from(new Set(chats.map((c) => c.tripId))).map((id) =>
         chats.find((c) => c.tripId === id)
       );
@@ -87,7 +106,7 @@ function MessagesContent() {
     fetchConversations();
   }, [user]);
 
-  // Sidebar: last message preview + unread + stable sort by lastMessageAt ONLY
+  // Listen to last messages and update conversations
   useEffect(() => {
     if (!user || conversations.length === 0) return;
 
@@ -100,6 +119,11 @@ function MessagesContent() {
             const seenBy = Array.isArray(msg?.seenBy) ? msg.seenBy : [];
             const isOpenChat = selectedTripId === chat.tripId;
 
+            // Message is unread if:
+            // 1. Chat is not currently open
+            // 2. Message exists
+            // 3. Message is not from me
+            // 4. I haven't seen it yet
             const unread =
               !isOpenChat &&
               msg &&
@@ -108,17 +132,17 @@ function MessagesContent() {
 
             return {
               ...c,
-              lastMessage: msg?.text || "Tap to open chat...",
-              lastMessageAt: msg?.sentAt || null,
+              lastMessage: msg?.text || "No messages yet",
+              lastMessageAt: msg?.sentAt || c.lastMessageAt,
               unread: Boolean(unread)
             };
           });
 
+          // Sort by lastMessageAt - most recent first
           updated.sort((a, b) => {
             const ta = toMillisSafe(a.lastMessageAt);
             const tb = toMillisSafe(b.lastMessageAt);
-            if (tb !== ta) return tb - ta;
-            return String(a.tripId).localeCompare(String(b.tripId));
+            return tb - ta; // Descending order
           });
 
           return [...updated];
@@ -129,38 +153,53 @@ function MessagesContent() {
     return () => unsubs.forEach((u) => u && u());
   }, [user, conversations.length, selectedTripId]);
 
-  // Chat listener: show messages + mark seen when chat is open
+  // Listen to chat messages
   useEffect(() => {
-    if (!selectedTripId || !user) return;
+    if (!selectedTripId || !user) {
+      setMessages([]);
+      lastMessageCountRef.current = 0;
+      return;
+    }
 
     setCurrentTripId(selectedTripId);
 
-    // when opening chat, mark as seen
-    markTripMessagesSeen(selectedTripId);
+    // Mark messages as seen when opening chat
+    setTimeout(() => {
+      markTripMessagesSeen(selectedTripId);
+    }, 500);
 
     const unsub = listenToTripChat((msgs) => {
+      const hadMessages = lastMessageCountRef.current > 0;
+      const newMessageCount = msgs.length;
+      const isNewMessage = newMessageCount > lastMessageCountRef.current;
+
       setMessages(msgs);
+      lastMessageCountRef.current = newMessageCount;
 
-      // while viewing chat, keep marking messages seen
-      markTripMessagesSeen(selectedTripId);
+      // Mark messages as seen
+      if (msgs.length > 0) {
+        setTimeout(() => {
+          markTripMessagesSeen(selectedTripId);
+        }, 300);
+      }
 
-      // clear unread immediately for opened chat
+      // Clear unread badge immediately for this chat
       setConversations((prev) =>
         prev.map((c) =>
           c.tripId === selectedTripId ? { ...c, unread: false } : c
         )
       );
 
-      requestAnimationFrame(() => {
-        if (messagesBoxRef.current) {
-          messagesBoxRef.current.scrollTop = messagesBoxRef.current.scrollHeight;
-        }
-      });
+      // Scroll to bottom
+      if (isNewMessage || !hadMessages) {
+        scrollToBottom(true);
+      }
     });
 
     return () => {
       unsub();
       setCurrentTripId(null);
+      lastMessageCountRef.current = 0;
     };
   }, [selectedTripId, user]);
 
@@ -169,6 +208,7 @@ function MessagesContent() {
 
     setSelectedTripId(tripId);
 
+    // Clear unread immediately
     setConversations((prev) =>
       prev.map((c) => (c.tripId === tripId ? { ...c, unread: false } : c))
     );
@@ -178,15 +218,31 @@ function MessagesContent() {
     } catch {}
   };
 
-  const send = () => {
-    if (!input.trim()) return;
-    sendTripMessage(input);
+  const send = async () => {
+    const trimmedInput = input.trim();
+    if (!trimmedInput) return;
+
+    // Clear input immediately for better UX
     setInput("");
+
+    try {
+      await sendTripMessage(trimmedInput);
+      
+      // Force scroll to bottom after sending
+      setTimeout(() => {
+        scrollToBottom(true);
+      }, 100);
+    } catch (error) {
+      console.error("Failed to send message:", error);
+      // Restore input on error
+      setInput(trimmedInput);
+    }
   };
 
   const formatTime = (ts) => {
-    const d = ts?.toDate ? ts.toDate() : ts ? new Date(ts) : null;
-    if (!d) return "";
+    if (!ts) return "";
+    const d = ts?.toDate ? ts.toDate() : new Date(ts);
+    if (!d || isNaN(d.getTime())) return "";
     return d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
   };
 
@@ -198,6 +254,12 @@ function MessagesContent() {
       <div className={styles.container}>
         <div className={styles.sidebar}>
           <h3 className={styles.sidebarTitle}>Messages</h3>
+
+          {conversations.length === 0 && user && (
+            <div style={{ padding: "20px", textAlign: "center", color: "#65676b" }}>
+              No conversations yet
+            </div>
+          )}
 
           {conversations.map((chat) => (
             <div
@@ -240,11 +302,22 @@ function MessagesContent() {
               </div>
 
               <div className={styles.messages} ref={messagesBoxRef}>
+                {messages.length === 0 && (
+                  <div style={{ 
+                    textAlign: "center", 
+                    color: "#65676b", 
+                    marginTop: "20px",
+                    fontSize: "14px" 
+                  }}>
+                    No messages yet. Start the conversation!
+                  </div>
+                )}
+
                 {messages.map((m) => {
                   const isMine = m.senderUid === auth?.currentUser?.uid;
                   const seenBy = Array.isArray(m.seenBy) ? m.seenBy : [];
 
-                  // REAL seen: my message is "seen" only if OTHER uid is in seenBy
+                  // Check if OTHER person has seen my message
                   const seen = isMine && otherUid && seenBy.includes(otherUid);
 
                   return (
@@ -295,11 +368,20 @@ function MessagesContent() {
                     type="text"
                     value={input}
                     onChange={(e) => setInput(e.target.value)}
-                    onKeyDown={(e) => e.key === "Enter" && send()}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" && !e.shiftKey) {
+                        e.preventDefault();
+                        send();
+                      }
+                    }}
                     className={styles.inputField}
                     placeholder="Type a message..."
                   />
-                  <button onClick={send} className={styles.sendBtn}>
+                  <button 
+                    onClick={send} 
+                    className={styles.sendBtn}
+                    disabled={!input.trim()}
+                  >
                     Send
                   </button>
                 </div>
@@ -307,7 +389,7 @@ function MessagesContent() {
             </>
           ) : (
             <div className={styles.noChatSelected}>
-              <h3>Select a chat</h3>
+              <h3>Select a chat to start messaging</h3>
             </div>
           )}
         </div>
@@ -318,7 +400,7 @@ function MessagesContent() {
 
 export default function MessagesPage() {
   return (
-    <Suspense fallback={null}>
+    <Suspense fallback={<div>Loading...</div>}>
       <MessagesContent />
     </Suspense>
   );
