@@ -423,9 +423,9 @@ export const markNotificationRead = async (id) => {
 let currentTripId = null;
 export const setCurrentTripId = (id) => currentTripId = id;
 
-export const sendTripMessage = async (text) => {
-  if (!currentTripId || !auth.currentUser) return;
-  await addDoc(collection(db, "trips", currentTripId, "messages"), {
+export const sendTripMessageForTrip = async (tripId, text) => {
+  if (!tripId || !auth.currentUser) return;
+  await addDoc(collection(db, "trips", tripId, "messages"), {
     text,
     sender: auth.currentUser.displayName || auth.currentUser.email,
     senderUid: auth.currentUser.uid,
@@ -433,15 +433,25 @@ export const sendTripMessage = async (text) => {
   });
 };
 
-export const listenToTripChat = (callback) => {
-  if (!currentTripId) return () => { };
+export const listenToTripChatForTrip = (tripId, callback) => {
+  if (!tripId) return () => { };
   const q = query(
-    collection(db, "trips", currentTripId, "messages"),
+    collection(db, "trips", tripId, "messages"),
     orderBy("sentAt", "asc")
   );
   return onSnapshot(q, snap => {
     callback(snap.docs.map(d => ({ id: d.id, ...d.data() })));
   });
+};
+
+export const sendTripMessage = async (text) => {
+  if (!currentTripId || !auth.currentUser) return;
+  return sendTripMessageForTrip(currentTripId, text);
+};
+
+export const listenToTripChat = (callback) => {
+  if (!currentTripId) return () => { };
+  return listenToTripChatForTrip(currentTripId, callback);
 };
 
 export const listenToTripLastMessage = (tripId, callback) => {
