@@ -24,7 +24,6 @@ function MessagesContent() {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
   const [sending, setSending] = useState(false);
-  const [showSidebar, setShowSidebar] = useState(true);
   const [lastMessages, setLastMessages] = useState({});
   const [unreadCounts, setUnreadCounts] = useState({});
 
@@ -50,7 +49,6 @@ function MessagesContent() {
     const tripIdFromUrl = searchParams.get("tripId");
     if (tripIdFromUrl) {
       setSelectedTripId(tripIdFromUrl);
-      setShowSidebar(false);
     }
   }, [searchParams]);
 
@@ -165,22 +163,12 @@ function MessagesContent() {
     if (!otherUid) return "✓";
     
     if (msg.seenBy?.includes(otherUid)) {
-      return "✓✓";
+      return "read";
     } else if (msg.deliveredTo?.includes(otherUid)) {
-      return "✓✓";
+      return "delivered";
     } else {
-      return "✓";
+      return "sent";
     }
-  };
-
-  const getStatusColor = (msg) => {
-    if (!msg || msg.senderUid !== user.uid) return "";
-    
-    const otherUid = currentChat?.otherUid;
-    if (msg.seenBy?.includes(otherUid)) {
-      return styles.statusRead;
-    }
-    return styles.statusSent;
   };
 
   const currentChat = conversations.find(c => c.tripId === selectedTripId);
@@ -198,22 +186,20 @@ function MessagesContent() {
   return (
     <div className={styles.page}>
       <div className={styles.container}>
-        {showSidebar && (
-          <aside className={styles.sidebar}>
-            <h3 className={styles.sidebarTitle}>Messages</h3>
+        <aside className={styles.sidebar}>
+          <h3 className={styles.sidebarTitle}>Messages</h3>
+          <div className={styles.conversationList}>
             {sortedConversations.map(chat => {
               const lastMsg = lastMessages[chat.tripId];
               const unreadCount = unreadCounts[chat.tripId] || 0;
               const isUnread = lastMsg && lastMsg.senderUid !== user.uid && !lastMsg.seenBy?.includes(user.uid);
+              const isSelected = chat.tripId === selectedTripId;
               
               return (
                 <div
                   key={chat.tripId}
-                  className={`${styles.chatItem} ${isUnread ? styles.chatItemUnread : ''}`}
-                  onClick={() => {
-                    setSelectedTripId(chat.tripId);
-                    setShowSidebar(false);
-                  }}
+                  className={`${styles.chatItem} ${isUnread ? styles.chatItemUnread : ''} ${isSelected ? styles.chatItemSelected : ''}`}
+                  onClick={() => setSelectedTripId(chat.tripId)}
                 >
                   <div className={styles.chatAvatar}>{chat.avatar}</div>
                   <div className={styles.chatInfo}>
@@ -242,17 +228,13 @@ function MessagesContent() {
                 </div>
               );
             })}
-          </aside>
-        )}
+          </div>
+        </aside>
 
         <main className={styles.chatWindow}>
           {currentChat ? (
             <>
               <header className={styles.header}>
-                <button
-                  className={styles.backBtn}
-                  onClick={() => setShowSidebar(true)}
-                >←</button>
                 <div className={styles.headerInfo}>
                   <p className={styles.headerName}>{currentChat.name}</p>
                   <p className={styles.headerRoute}>{currentChat.route}</p>
@@ -281,8 +263,22 @@ function MessagesContent() {
                         <div className={styles.meta}>
                           <span className={styles.time}>{formatTime(m.sentAt)}</span>
                           {mine && status && (
-                            <span className={`${styles.check} ${getStatusColor(m)}`}>
-                              {status}
+                            <span className={styles.checkmarks}>
+                              {status === "read" ? (
+                                <svg className={styles.checkRead} viewBox="0 0 16 11" width="16" height="11">
+                                  <path d="M11.071.653a.75.75 0 0 1 1.058.046l3.5 3.75a.75.75 0 0 1-1.104 1.014L11.5 2.25 8.682 5.068a.75.75 0 0 1-1.06-1.06l3.448-3.355zM5.071.653a.75.75 0 0 1 1.058.046l3.5 3.75a.75.75 0 0 1-1.104 1.014L5.5 2.25.525 7.013a.75.75 0 0 1-1.05-1.076l5.596-5.284z" fill="currentColor"/>
+                                  <path d="M7.429 7.568a.75.75 0 0 1 1.06 0l2.5 2.5a.75.75 0 1 1-1.06 1.06L8 9.197l-4.929 4.93a.75.75 0 0 1-1.06-1.061l5.45-5.45.968-.048z" fill="currentColor"/>
+                                </svg>
+                              ) : status === "delivered" ? (
+                                <svg className={styles.checkDelivered} viewBox="0 0 16 11" width="16" height="11">
+                                  <path d="M11.071.653a.75.75 0 0 1 1.058.046l3.5 3.75a.75.75 0 0 1-1.104 1.014L11.5 2.25 8.682 5.068a.75.75 0 0 1-1.06-1.06l3.448-3.355zM5.071.653a.75.75 0 0 1 1.058.046l3.5 3.75a.75.75 0 0 1-1.104 1.014L5.5 2.25.525 7.013a.75.75 0 0 1-1.05-1.076l5.596-5.284z" fill="currentColor"/>
+                                  <path d="M7.429 7.568a.75.75 0 0 1 1.06 0l2.5 2.5a.75.75 0 1 1-1.06 1.06L8 9.197l-4.929 4.93a.75.75 0 0 1-1.06-1.061l5.45-5.45.968-.048z" fill="currentColor"/>
+                                </svg>
+                              ) : (
+                                <svg className={styles.checkSent} viewBox="0 0 12 11" width="12" height="11">
+                                  <path d="M11.071.653a.75.75 0 0 1 0 1.06l-7.5 7.5a.75.75 0 0 1-1.06 0l-2.5-2.5a.75.75 0 1 1 1.06-1.06l1.97 1.97 6.97-6.97a.75.75 0 0 1 1.06 0z" fill="currentColor"/>
+                                </svg>
+                              )}
                             </span>
                           )}
                         </div>
