@@ -159,6 +159,15 @@ export const getTrip = async (tripId) => {
 };
 
 export const listenToAvailableTrips = (filters = {}, callback) => {
+  if (typeof filters === "function") {
+    callback = filters;
+    filters = {};
+  }
+
+  if (typeof callback !== "function") {
+    return () => {};
+  }
+
   let q = query(collection(db, "trips"), where("status", "==", "available"));
 
   if (filters.from) {
