@@ -1,159 +1,404 @@
-/* Notification Dropdown Styles */
-.notification-container {
-  position: relative;
-  display: inline-block;
-}
+"use client"
 
-.notifications-dropdown {
-  position: absolute;
-  top: 100%;
-  right: 0;
-  width: 350px;
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
-  margin-top: 10px;
-  z-index: 1000;
-  overflow: hidden;
-  border: 1px solid #e5e7eb;
-}
+import { useState, useEffect, useRef } from "react"
+import Link from "next/link"
+import Image from "next/image"
+import { useRouter } from "next/navigation"
 
-.notifications-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 16px;
-  border-bottom: 1px solid #e5e7eb;
-  background: #f9fafb;
-}
+export default function Navbar() {
+  const router = useRouter()
+  const [user, setUser] = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [hasUnreadMessages, setHasUnreadMessages] = useState(false)
+  const [hasUnreadNotifications, setHasUnreadNotifications] = useState(false)
+  const [trackedTripIds, setTrackedTripIds] = useState([])
+  const [notifications, setNotifications] = useState([])
+  const [notifOpen, setNotifOpen] = useState(false)
+  const notifRef = useRef(null)
 
-.notifications-header h3 {
-  margin: 0;
-  font-size: 16px;
-  font-weight: 600;
-  color: #111827;
-}
+  useEffect(() => {
+    async function checkAuth() {
+      try {
+        const { onAuthChange } = await import("../../lib/auth")
+        const unsubscribe = onAuthChange((currentUser) => {
+          setUser(currentUser)
+          setLoading(false)
+        })
+        return () => unsubscribe()
+      } catch {
+        setLoading(false)
+      }
+    }
+    checkAuth()
+  }, [])
 
-.notifications-header a {
-  font-size: 14px;
-  color: #3b82f6;
-  text-decoration: none;
-  font-weight: 500;
-}
+  useEffect(() => {
+    function onDocClick(e) {
+      if (!notifOpen) return
+      if (!notifRef.current) return
+      if (!notifRef.current.contains(e.target)) setNotifOpen(false)
+    }
+    document.addEventListener("mousedown", onDocClick)
+    return () => document.removeEventListener("mousedown", onDocClick)
+  }, [notifOpen])
 
-.notifications-header a:hover {
-  text-decoration: underline;
-}
+  useEffect(() => {
+    if (!user) {
+      setHasUnreadMessages(false)
+      setHasUnreadNotifications(false)
+      setTrackedTripIds([])
+      setNotifications([])
+      setNotifOpen(false)
+      return
+    }
 
-.notifications-list {
-  max-height: 400px;
-  overflow-y: auto;
-}
+    let mounted = true
+    let unsubs = []
+    const unreadMap = {}
 
-.notification-item {
-  display: flex;
-  align-items: flex-start;
-  padding: 12px 16px;
-  cursor: pointer;
-  border-bottom: 1px solid #f3f4f6;
-  position: relative;
-  transition: background-color 0.2s;
-}
+    const getSeenKey = (uid, tripId) => `cc_seen_${uid}_${tripId}`
 
-.notification-item:hover {
-  background-color: #f9fafb;
-}
+    const getLastSeen = (uid, tripId) => {
+      try {
+        const raw = localStorage.getItem(getSeenKey(uid, tripId))
+        return raw ? Number(raw) : 0
+      } catch {
+        return 0
+      }
+    }
 
-.notification-item.unread {
-  background-color: #f0f9ff;
-}
+    const toMillis = (ts) => {
+      if (!ts) return 0
+      if (typeof ts === "number") return ts
+      if (ts?.toMillis) return ts.toMillis()
+      if (ts?.toDate) return ts.toDate().getTime()
+      const t = new Date(ts).getTime()
+      return Number.isFinite(t) ? t : 0
+    }
 
-.notification-item.unread:hover {
-  background-color: #e0f2fe;
-}
+    const formatNotifTime = (createdAt) => {
+      const t = toMillis(createdAt)
+      if (!t) return ""
+      const diff = Date.now() - t
+      const mins = Math.floor(diff / 60000)
+      if (mins < 1) return "Just now"
+      if (mins < 60) return `${mins}m`
+      const hrs = Math.floor(mins / 60)
+      if (hrs < 24) return `${hrs}h`
+      const days = Math.floor(hrs / 24)
+      return `${days}d`
+    }
 
-.notification-icon {
-  margin-right: 12px;
-  color: #6b7280;
-  font-size: 18px;
-  margin-top: 2px;
-}
+    async function initUnread() {
+      try {
+        const {
+          getUserTrips,
+          getUserOrders,
+          listenToTripLastMessage,
+          listenToNotifications,
+          markNotificationRead
+        } = await import("../../lib/db")
 
-.notification-content {
-  flex: 1;
-}
+        const postedTrips = await getUserTrips(user.uid)
+        const bookedOrders = await getUserOrders(user.uid)
 
-.notification-message {
-  margin: 0 0 4px 0;
-  font-size: 14px;
-  color: #111827;
-  line-height: 1.4;
-}
+        const trips = [...postedTrips, ...bookedOrders].filter((t) => t.status === "booked")
+        const uniqueTripIds = Array.from(new Set(trips.map((t) => t.id)))
+        setTrackedTripIds(uniqueTripIds)
 
-.notification-time {
-  font-size: 12px;
-  color: #6b7280;
-}
+        unsubs = uniqueTripIds.map((tripId) =>
+          listenToTripLastMessage(tripId, (msg) => {
+            if (!mounted) return
+            if (!msg) {
+              unreadMap[tripId] = false
+              setHasUnreadMessages(Object.values(unreadMap).some(Boolean))
+              return
+            }
 
-.unread-dot {
-  width: 8px;
-  height: 8px;
-  background-color: #3b82f6;
-  border-radius: 50%;
-  margin-left: 8px;
-  margin-top: 6px;
-}
+            const msgTime = toMillis(msg.sentAt)
+            const lastSeen = getLastSeen(user.uid, tripId)
 
-.no-notifications {
-  padding: 32px 16px;
-  text-align: center;
-  color: #6b7280;
-}
+            if (msg.senderUid !== user.uid && msgTime > lastSeen) unreadMap[tripId] = true
+            else unreadMap[tripId] = false
 
-.no-notifications i {
-  font-size: 32px;
-  margin-bottom: 12px;
-  color: #d1d5db;
-}
+            setHasUnreadMessages(Object.values(unreadMap).some(Boolean))
+          })
+        )
 
-.no-notifications p {
-  margin: 0;
-  font-size: 14px;
-}
+        const unsubNotifications = listenToNotifications((notifs) => {
+          if (!mounted) return
+          setNotifications(notifs.slice(0, 6))
+          setHasUnreadNotifications(notifs.some((n) => !n.isRead))
+        })
 
-.notifications-footer {
-  padding: 12px 16px;
-  text-align: center;
-  border-top: 1px solid #e5e7eb;
-  background: #f9fafb;
-}
+        unsubs.push(unsubNotifications)
 
-.notifications-footer a {
-  font-size: 14px;
-  color: #3b82f6;
-  text-decoration: none;
-  font-weight: 500;
-}
+        const originalOpen = () => setNotifOpen((v) => !v)
+        const openAndAutoRead = () => {
+          setNotifOpen((v) => !v)
+          setHasUnreadNotifications(false)
+          try {
+            notifications
+              .filter((n) => n && !n.isRead && n.id)
+              .forEach((n) => markNotificationRead(n.id))
+          } catch {}
+        }
 
-.notifications-footer a:hover {
-  text-decoration: underline;
-}
+        Navbar.__openNotif = openAndAutoRead
+        Navbar.__formatNotifTime = formatNotifTime
+      } catch {}
+    }
 
-/* Scrollbar styling */
-.notifications-list::-webkit-scrollbar {
-  width: 6px;
-}
+    initUnread()
+    return () => {
+      mounted = false
+      unsubs.forEach((u) => u && u())
+    }
+  }, [user, notifications])
 
-.notifications-list::-webkit-scrollbar-track {
-  background: #f1f1f1;
-  border-radius: 3px;
-}
+  const handleLogout = async () => {
+    const { logOut } = await import("../../lib/auth")
+    await logOut()
+    router.push("/")
+  }
 
-.notifications-list::-webkit-scrollbar-thumb {
-  background: #c1c1c1;
-  border-radius: 3px;
-}
+  const openMessages = () => {
+    if (!user) return
+    const now = Date.now()
+    trackedTripIds.forEach((tripId) => {
+      localStorage.setItem(`cc_seen_${user.uid}_${tripId}`, String(now))
+    })
+    setHasUnreadMessages(false)
+    router.push("/messages")
+  }
 
-.notifications-list::-webkit-scrollbar-thumb:hover {
-  background: #a1a1a1;
+  const toggleNotifications = async () => {
+    try {
+      const { markNotificationRead } = await import("../../lib/db")
+      setNotifOpen((v) => !v)
+      setHasUnreadNotifications(false)
+      notifications
+        .filter((n) => n && !n.isRead && n.id)
+        .forEach((n) => markNotificationRead(n.id))
+    } catch {
+      setNotifOpen((v) => !v)
+    }
+  }
+
+  const openNotifLink = async (n) => {
+    try {
+      const { markNotificationRead } = await import("../../lib/db")
+      if (n?.id) await markNotificationRead(n.id)
+    } catch {}
+    setNotifOpen(false)
+    if (n?.link) router.push(n.link)
+  }
+
+  const notifTime = (createdAt) => {
+    const t =
+      typeof createdAt === "number"
+        ? createdAt
+        : createdAt?.toMillis
+        ? createdAt.toMillis()
+        : createdAt?.toDate
+        ? createdAt.toDate().getTime()
+        : new Date(createdAt || 0).getTime()
+
+    if (!t) return ""
+    const diff = Date.now() - t
+    const mins = Math.floor(diff / 60000)
+    if (mins < 1) return "Just now"
+    if (mins < 60) return `${mins}m`
+    const hrs = Math.floor(mins / 60)
+    if (hrs < 24) return `${hrs}h`
+    const days = Math.floor(hrs / 24)
+    return `${days}d`
+  }
+
+  return (
+    <nav className="navbar cc-navbar">
+      <div className="navbar-left">
+        <Link href="/" className="logo cc-logo">
+          <span className="cc-logoMark">
+            <Image src="/favicon.ico" alt="CarryConnect" width={18} height={18} />
+          </span>
+          <span className="cc-brandText">CarryConnect</span>
+        </Link>
+      </div>
+
+      <div className="navbar-center">
+        <Link href="/find-a-carrier">Find a Carrier</Link>
+        <Link href="/add-trip">Add Trip</Link>
+        {user && (
+          <>
+            <Link href="/my-trips">My Trips</Link>
+            <Link href="/my-orders">My Orders</Link>
+          </>
+        )}
+      </div>
+
+      <div className="navbar-right">
+        {user ? (
+          <>
+            <div className="icon-wrap cc-iconBtn" style={{ position: "relative" }} ref={notifRef}>
+              <button
+                type="button"
+                className="icon-wrap cc-iconBtn"
+                onClick={toggleNotifications}
+                style={{ border: "none", background: "transparent", padding: 0 }}
+                aria-label="Notifications"
+              >
+                <i className="fa-regular fa-bell icon"></i>
+                {hasUnreadNotifications && <span className="icon-badge"></span>}
+              </button>
+
+              {notifOpen && (
+                <div
+                  style={{
+                    position: "absolute",
+                    top: "46px",
+                    right: 0,
+                    width: "320px",
+                    background: "#fff",
+                    border: "1px solid rgba(0,0,0,0.08)",
+                    borderRadius: "12px",
+                    boxShadow: "0 12px 30px rgba(0,0,0,0.12)",
+                    overflow: "hidden",
+                    zIndex: 9999
+                  }}
+                >
+                  <div
+                    style={{
+                      padding: "12px 14px",
+                      borderBottom: "1px solid rgba(0,0,0,0.06)",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between"
+                    }}
+                  >
+                    <strong style={{ fontSize: "14px" }}>Notifications</strong>
+                    <button
+                      type="button"
+                      onClick={() => setNotifOpen(false)}
+                      style={{
+                        border: "none",
+                        background: "transparent",
+                        cursor: "pointer",
+                        fontSize: "14px",
+                        color: "#666"
+                      }}
+                    >
+                      ✕
+                    </button>
+                  </div>
+
+                  {notifications.length === 0 ? (
+                    <div style={{ padding: "14px", color: "#777", fontSize: "13px" }}>
+                      No notifications yet.
+                    </div>
+                  ) : (
+                    <div style={{ maxHeight: "360px", overflowY: "auto" }}>
+                      {notifications.map((n) => (
+                        <button
+                          key={n.id}
+                          type="button"
+                          onClick={() => openNotifLink(n)}
+                          style={{
+                            width: "100%",
+                            textAlign: "left",
+                            padding: "12px 14px",
+                            border: "none",
+                            background: n.isRead ? "#fff" : "#f5f7ff",
+                            cursor: "pointer",
+                            display: "flex",
+                            gap: "10px",
+                            borderBottom: "1px solid rgba(0,0,0,0.06)"
+                          }}
+                        >
+                          <div
+                            style={{
+                              width: "34px",
+                              height: "34px",
+                              borderRadius: "999px",
+                              background: "#c7d9ff",
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              fontWeight: 700
+                            }}
+                          >
+                            <i className="fa-regular fa-bell" />
+                          </div>
+
+                          <div style={{ flex: 1 }}>
+                            <div style={{ display: "flex", justifyContent: "space-between", gap: "8px" }}>
+                              <div style={{ fontSize: "13px", fontWeight: 700, color: "#111" }}>
+                                {n.title || "Notification"}
+                              </div>
+                              <div style={{ fontSize: "12px", color: "#777", whiteSpace: "nowrap" }}>
+                                {notifTime(n.createdAt)}
+                              </div>
+                            </div>
+                            <div style={{ fontSize: "12px", color: "#444", marginTop: "4px" }}>
+                              {n.message || ""}
+                            </div>
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+
+                  <div style={{ padding: "10px 14px", background: "#fff" }}>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setNotifOpen(false)
+                        router.push("/notifications")
+                      }}
+                      style={{
+                        width: "100%",
+                        border: "1px solid rgba(0,0,0,0.12)",
+                        background: "#fff",
+                        borderRadius: "10px",
+                        padding: "10px",
+                        cursor: "pointer",
+                        fontWeight: 700
+                      }}
+                    >
+                      See all
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <button
+              type="button"
+              className="icon-wrap cc-iconBtn"
+              onClick={openMessages}
+              style={{ border: "none", background: "transparent" }}
+              aria-label="Messages"
+            >
+              <i className="fa-regular fa-comments icon"></i>
+              {hasUnreadMessages && <span className="icon-badge"></span>}
+            </button>
+
+            <Link href="/profile" className="icon-wrap cc-iconBtn" aria-label="Profile">
+              <i className="fa-regular fa-user icon"></i>
+            </Link>
+
+            <button onClick={handleLogout} className="add-trip-btn" style={{ background: "#ef4444" }}>
+              Logout
+            </button>
+          </>
+        ) : (
+          !loading && (
+            <Link href="/auth" className="add-trip-btn">
+              Login / Sign Up
+            </Link>
+          )
+        )}
+      </div>
+    </nav>
+  )
 }
