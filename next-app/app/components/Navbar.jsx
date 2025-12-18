@@ -18,8 +18,6 @@ export default function Navbar() {
   const [notifications, setNotifications] = useState([])
   const [showNotifPopup, setShowNotifPopup] = useState(false)
 
-  const [trackedTripIds, setTrackedTripIds] = useState([])
-
   useEffect(() => {
     async function checkAuth() {
       try {
@@ -40,7 +38,6 @@ export default function Navbar() {
     if (!user) {
       setHasUnreadMessages(false)
       setHasUnreadNotifications(false)
-      setTrackedTripIds([])
       setNotifications([])
       return
     }
@@ -63,23 +60,18 @@ export default function Navbar() {
 
         const trips = [...posted, ...booked].filter(t => t.status === "booked")
         const ids = Array.from(new Set(trips.map(t => t.id)))
-        setTrackedTripIds(ids)
 
-        // Listen to last messages for unread indicator
         unsubs = ids.map(tripId =>
           listenToTripLastMessage(tripId, (msg) => {
             if (!mounted || !msg) return
-
+            
             const seenBy = Array.isArray(msg.seenBy) ? msg.seenBy : []
-            // Message is unread if it's not from me and I haven't seen it
             unreadMap[tripId] = msg.senderUid !== user.uid && !seenBy.includes(user.uid)
-
-            // Update badge
+            
             setHasUnreadMessages(Object.values(unreadMap).some(Boolean))
           })
         )
 
-        // Listen to notifications
         const unsubNotif = listenToNotifications((list) => {
           setNotifications(list.slice(0, 12))
           setHasUnreadNotifications(list.some(n => !n.isRead))
@@ -114,7 +106,6 @@ export default function Navbar() {
     router.push("/")
   }
 
-  // FIXED: Navigate immediately without blocking
   const openMessages = () => {
     router.push("/messages")
   }
