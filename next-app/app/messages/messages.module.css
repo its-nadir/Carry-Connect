@@ -1,7 +1,7 @@
 .page {
   min-height: 100vh;
   padding: 20px;
-  background: #f4f6fb;
+  background: linear-gradient(180deg, #f4f6fb, #eef1f7);
 }
 
 .container {
@@ -16,34 +16,36 @@
   width: 28%;
   background: white;
   padding: 18px;
-  border-radius: 14px;
+  border-radius: 16px;
   overflow-y: auto;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.04);
+  box-shadow: 0 8px 30px rgba(0,0,0,0.05);
 }
 
 .sidebarTitle {
   font-size: 18px;
   font-weight: 600;
   margin-bottom: 18px;
+  color: #222;
 }
 
 .chatItem {
   display: flex;
   gap: 12px;
   padding: 14px;
-  border-radius: 12px;
-  margin-bottom: 12px;
+  border-radius: 14px;
+  margin-bottom: 10px;
   background: #f9fafc;
   cursor: pointer;
-  transition: background 0.2s ease;
+  transition: all 0.2s ease;
+  border: 1px solid transparent;
 }
 
 .chatItem:hover {
-  background: #eef3ff;
+  background: #f0f4ff;
 }
 
 .selectedChat {
-  background: #eaf1ff;
+  background: #eef3ff;
   border: 1px solid #cfe0ff;
 }
 
@@ -57,10 +59,12 @@
   justify-content: center;
   align-items: center;
   font-weight: 600;
+  flex-shrink: 0;
 }
 
 .chatInfo {
   flex: 1;
+  min-width: 0;
 }
 
 .chatName {
@@ -68,14 +72,15 @@
   margin: 0;
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
+  color: #111;
 }
 
 .unreadDot {
   width: 8px;
   height: 8px;
   border-radius: 999px;
-  background: #ff3b30;
+  background: #2a61ff;
 }
 
 .chatRoute {
@@ -86,18 +91,16 @@
 
 .chatMsg {
   font-size: 13px;
-  color: #555;
+  color: #666;
   margin-top: 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .chatMsgUnread {
-  font-weight: 700;
+  font-weight: 600;
   color: #000;
-}
-
-.chatTime {
-  font-size: 11px;
-  color: #999;
 }
 
 /* ================= CHAT WINDOW ================= */
@@ -105,11 +108,11 @@
 .chatWindow {
   flex: 1;
   background: white;
-  border-radius: 14px;
+  border-radius: 16px;
   padding: 0;
   display: flex;
   flex-direction: column;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.04);
+  box-shadow: 0 8px 30px rgba(0,0,0,0.05);
 }
 
 /* ================= HEADER ================= */
@@ -136,6 +139,7 @@
 
 .headerName {
   font-weight: 600;
+  color: #111;
 }
 
 .headerRoute {
@@ -147,15 +151,9 @@
 
 .messages {
   flex: 1;
-  padding: 20px;
+  padding: 24px;
   overflow-y: auto;
-  background: #f7f9ff;
-}
-
-.emptyState {
-  text-align: center;
-  color: #aaa;
-  margin-top: 50px;
+  background: linear-gradient(180deg, #f7f9ff, #f1f4fb);
 }
 
 .noChatSelected {
@@ -164,6 +162,7 @@
   justify-content: center;
   height: 100%;
   color: #999;
+  font-size: 15px;
 }
 
 /* ================= MESSAGE BUBBLES ================= */
@@ -171,35 +170,40 @@
 .msgBox {
   display: flex;
   align-items: flex-end;
-  margin-bottom: 10px;
+  margin-bottom: 14px;
 }
 
 .msgBoxRight {
   display: flex;
   flex-direction: row-reverse;
   align-items: flex-end;
-  margin-bottom: 10px;
+  margin-bottom: 14px;
 }
 
 .msgBubbleGray {
   background: white;
   padding: 10px 14px;
-  border-radius: 16px 16px 16px 4px;
-  max-width: 70%;
+  border-radius: 18px 18px 18px 6px;
+  max-width: 62%;
   box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+  font-size: 14px;
+  color: #222;
 }
 
 .msgBubbleBlue {
   background: linear-gradient(135deg, #2a61ff, #5b8cff);
   color: white;
   padding: 10px 14px;
-  border-radius: 16px 16px 4px 16px;
-  max-width: 70%;
+  border-radius: 18px 18px 6px 18px;
+  max-width: 62%;
+  font-size: 14px;
 }
 
-.msgSender,
-.msgSenderRight {
-  display: none;
+.msgTime {
+  margin-top: 4px;
+  font-size: 11px;
+  opacity: 0.8;
+  text-align: right;
 }
 
 /* ================= INPUT ================= */
