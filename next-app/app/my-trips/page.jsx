@@ -257,6 +257,15 @@ export default function MyTripsPage() {
                 )}
 
                 <div className={styles.actions}>
+                  {trip.status === "booked" && (
+                    <button
+                      onClick={() => router.push(`/messages?tripId=${trip.id}`)}
+                      className={styles.acceptBtn}
+                    >
+                      Message
+                    </button>
+                  )}
+
                   <button
                     onClick={() => handleDeleteClick(trip)}
                     className={trip.status === "booked" ? styles.deleteBtnDisabled : styles.deleteBtn}
@@ -264,6 +273,7 @@ export default function MyTripsPage() {
                     Delete
                   </button>
                 </div>
+
               </div>
             ))}
           </div>
