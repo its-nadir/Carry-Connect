@@ -44,7 +44,6 @@
   height: 140px;
   border-radius: 50%;
   overflow: hidden;
-  background: white;
   position: relative;
   border: 5px solid rgba(255, 255, 255, 0.3);
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
@@ -62,9 +61,92 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 48px;
+  font-size: 56px;
   font-weight: 700;
   color: white;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+  position: relative;
+}
+
+/* Beautiful gradient variations for different users */
+.avatarPlaceholder[data-letter="A"],
+.avatarPlaceholder[data-letter="B"],
+.avatarPlaceholder[data-letter="C"] {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.avatarPlaceholder[data-letter="D"],
+.avatarPlaceholder[data-letter="E"],
+.avatarPlaceholder[data-letter="F"] {
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+}
+
+.avatarPlaceholder[data-letter="G"],
+.avatarPlaceholder[data-letter="H"],
+.avatarPlaceholder[data-letter="I"] {
+  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+}
+
+.avatarPlaceholder[data-letter="J"],
+.avatarPlaceholder[data-letter="K"],
+.avatarPlaceholder[data-letter="L"] {
+  background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+}
+
+.avatarPlaceholder[data-letter="M"],
+.avatarPlaceholder[data-letter="N"],
+.avatarPlaceholder[data-letter="O"] {
+  background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+}
+
+.avatarPlaceholder[data-letter="P"],
+.avatarPlaceholder[data-letter="Q"],
+.avatarPlaceholder[data-letter="R"] {
+  background: linear-gradient(135deg, #30cfd0 0%, #330867 100%);
+}
+
+.avatarPlaceholder[data-letter="S"],
+.avatarPlaceholder[data-letter="T"],
+.avatarPlaceholder[data-letter="U"] {
+  background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+}
+
+.avatarPlaceholder[data-letter="V"],
+.avatarPlaceholder[data-letter="W"],
+.avatarPlaceholder[data-letter="X"] {
+  background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%);
+}
+
+.avatarPlaceholder[data-letter="Y"],
+.avatarPlaceholder[data-letter="Z"] {
+  background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+}
+
+.avatarPlaceholder[data-letter="0"],
+.avatarPlaceholder[data-letter="1"],
+.avatarPlaceholder[data-letter="2"],
+.avatarPlaceholder[data-letter="3"],
+.avatarPlaceholder[data-letter="4"],
+.avatarPlaceholder[data-letter="5"],
+.avatarPlaceholder[data-letter="6"],
+.avatarPlaceholder[data-letter="7"],
+.avatarPlaceholder[data-letter="8"],
+.avatarPlaceholder[data-letter="9"],
+.avatarPlaceholder[data-letter="U"] {
+  background: linear-gradient(135deg, #ff6e7f 0%, #bfe9ff 100%);
+}
+
+/* Add a subtle pattern overlay to avatars */
+.avatarPlaceholder::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: url('data:image/svg+xml,<svg width="40" height="40" xmlns="http://www.w3.org/2000/svg"><circle cx="10" cy="10" r="1.5" fill="rgba(255,255,255,0.1)"/><circle cx="30" cy="10" r="1.5" fill="rgba(255,255,255,0.1)"/><circle cx="10" cy="30" r="1.5" fill="rgba(255,255,255,0.1)"/><circle cx="30" cy="30" r="1.5" fill="rgba(255,255,255,0.1)"/></svg>');
+  opacity: 0.4;
 }
 
 .avatarLoading {
@@ -80,36 +162,9 @@
   z-index: 10;
 }
 
+/* REMOVED: Upload overlay - no more profile picture upload */
 .avatarOverlay {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.6);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  opacity: 0;
-  transition: opacity 0.3s ease;
-  cursor: pointer;
-  gap: 8px;
-}
-
-.avatar:hover .avatarOverlay {
-  opacity: 1;
-}
-
-.avatarOverlay i {
-  color: white;
-  font-size: 28px;
-}
-
-.avatarOverlay span {
-  color: white;
-  font-size: 12px;
-  font-weight: 600;
+  display: none !important;
 }
 
 .userInfo {
