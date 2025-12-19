@@ -337,11 +337,6 @@ function ProfileContent() {
                   <i className="fa-solid fa-circle-check"></i> Email Verified
                 </span>
               )}
-              {!isOwnProfile && phoneVerified && (
-                <span className={styles.verifiedBadge}>
-                  <i className="fa-solid fa-circle-check"></i> Phone Verified
-                </span>
-              )}
               <span className={styles.memberBadge}>
                 <i className="fa-solid fa-calendar-days"></i> Member since {memberSince}
               </span>
