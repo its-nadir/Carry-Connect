@@ -1,12 +1,4 @@
-/* ADD THESE STYLES TO YOUR EXISTING messages.module.css FILE */
-
-/* View Profile Button */
-.viewProfileBtn {
-  padding: 10px 20px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  border: none;
-  border-radius: 8px;.page {
+.page {
   height: 100vh;
   background: #f0f2f5;
 }
@@ -199,32 +191,6 @@
   margin: 0;
 }
 
-.viewProfileBtn {
-  padding: 10px 20px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  font-weight: 600;
-  font-size: 14px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  transition: all 0.3s ease;
-  white-space: nowrap;
-  flex-shrink: 0;
-}
-
-.viewProfileBtn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
-}
-
-.viewProfileBtn i {
-  font-size: 14px;
-}
-
 .messages {
   flex: 1;
   padding: 16px;
@@ -264,13 +230,6 @@
   font-size: 12px;
   font-weight: 600;
   margin-bottom: 4px;
-  cursor: pointer;
-  transition: transform 0.2s ease, opacity 0.2s ease;
-}
-
-.msgAvatar:hover {
-  transform: scale(1.1);
-  opacity: 0.85;
 }
 
 .msgAvatarSpacer {
@@ -407,7 +366,6 @@
   color: #65676b;
 }
 
-/* Responsive Design */
 @media (max-width: 900px) {
   .sidebar {
     width: 100%;
@@ -432,16 +390,6 @@
   .header {
     padding: 12px 16px;
   }
-
-  .viewProfileBtn span {
-    display: none;
-  }
-
-  .viewProfileBtn {
-    padding: 10px 14px;
-    min-width: 44px;
-    justify-content: center;
-  }
 }
 
 @media (max-width: 600px) {
@@ -465,62 +413,5 @@
 
   .headerRoute {
     font-size: 12px;
-  }
-}
-
-  cursor: pointer;
-  font-weight: 600;
-  font-size: 14px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  transition: all 0.3s ease;
-  white-space: nowrap;
-}
-
-.viewProfileBtn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
-}
-
-.viewProfileBtn i {
-  font-size: 14px;
-}
-
-/* Update header styles if needed */
-.header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 20px 24px;
-  background: white;
-  border-bottom: 1px solid #e5e7eb;
-  gap: 16px;
-}
-
-.headerInfo {
-  flex: 1;
-}
-
-/* Make message avatar clickable */
-.msgAvatar {
-  transition: transform 0.2s ease, opacity 0.2s ease;
-}
-
-.msgAvatar:hover {
-  transform: scale(1.1);
-  opacity: 0.8;
-}
-
-/* Responsive adjustments */
-@media (max-width: 768px) {
-  .viewProfileBtn span {
-    display: none; /* Hide text on mobile */
-  }
-  
-  .viewProfileBtn {
-    padding: 10px 14px;
-    min-width: 44px;
-    justify-content: center;
   }
 }
