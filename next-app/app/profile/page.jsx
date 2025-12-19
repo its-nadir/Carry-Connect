@@ -1,12 +1,13 @@
 "use client";
 
 import { useState, useEffect, Suspense } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams, useParams } from "next/navigation";
 import styles from "./profile.module.css";
 import ConfirmationModal from "../components/ConfirmationModal";
 
 function ProfileContent() {
   const router = useRouter();
+  const params = useParams();
   const searchParams = useSearchParams();
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -22,12 +23,7 @@ function ProfileContent() {
     location: ""
   });
 
-  const [isVerifyingPhone, setIsVerifyingPhone] = useState(false);
-  const [verificationId, setVerificationId] = useState("");
-  const [verificationCode, setVerificationCode] = useState("");
   const [phoneVerified, setPhoneVerified] = useState(false);
-  const [verifyError, setVerifyError] = useState("");
-  const [verifySuccess, setVerifySuccess] = useState("");
 
   const [modalMessage, setModalMessage] = useState(null);
   const [modalType, setModalType] = useState("success");
@@ -41,10 +37,11 @@ function ProfileContent() {
 
     async function init() {
       try {
-        const { onAuthChange, setupRecaptcha } = await import("../../lib/auth");
+        const { onAuthChange } = await import("../../lib/auth");
         const { getUserProfile, getUserTrips, getUserOrders } = await import("../../lib/db");
 
-        const profileUserId = searchParams.get("userId");
+        // Get userId from URL params first, fallback to searchParams
+        const profileUserId = params?.uid || searchParams.get("userId");
 
         unsubscribeAuth = onAuthChange(async (currentUser) => {
           if (!currentUser) {
@@ -57,6 +54,14 @@ function ProfileContent() {
           setViewedUserId(targetUserId);
 
           const profile = await getUserProfile(targetUserId);
+          
+          if (!profile && profileUserId) {
+            // User not found
+            setLoading(false);
+            setUser(null);
+            return;
+          }
+
           const userData = profile || {
             uid: targetUserId,
             email: currentUser.email,
@@ -71,7 +76,7 @@ function ProfileContent() {
             currentUserId: currentUser.uid
           });
 
-          if (isOwnProfile || !profileUserId) {
+          if (!profileUserId || profileUserId === currentUser.uid) {
             setFormData({
               name: userData.name || "",
               email: userData.email || "",
@@ -90,10 +95,6 @@ function ProfileContent() {
           setMyOrders(orders);
 
           setLoading(false);
-
-          if (isOwnProfile || !profileUserId) {
-            setupRecaptcha("recaptcha-container");
-          }
         });
       } catch (error) {
         console.error("Error initializing profile:", error);
@@ -104,12 +105,8 @@ function ProfileContent() {
     init();
     return () => {
       if (unsubscribeAuth) unsubscribeAuth();
-      if (window.recaptchaVerifier) {
-        window.recaptchaVerifier.clear();
-        window.recaptchaVerifier = null;
-      }
     };
-  }, [router, searchParams]);
+  }, [router, params, searchParams]);
 
   const handleUpdateProfile = async (e) => {
     e.preventDefault();
@@ -124,67 +121,6 @@ function ProfileContent() {
       console.error("Error updating profile:", error);
       setModalType("error");
       setModalMessage("Failed to update profile.");
-    }
-  };
-
-  const handleVerifyPhone = async () => {
-    if (!formData.phone) {
-      setModalType("error");
-      setModalMessage("Please enter a phone number first.");
-      return;
-    }
-
-    setVerifyError("");
-    setVerifySuccess("");
-    setIsVerifyingPhone(true);
-
-    try {
-      const { linkPhoneNumber, setupRecaptcha } = await import("../../lib/auth");
-      const { auth } = await import("../../lib/firebase");
-
-      const appVerifier = setupRecaptcha("recaptcha-container");
-      if (!appVerifier) {
-        throw new Error("Recaptcha not initialized");
-      }
-
-      let phoneToVerify = formData.phone;
-
-      if (!auth.currentUser) {
-        throw new Error("User not authenticated");
-      }
-
-      const confirmationResult = await linkPhoneNumber(auth.currentUser, phoneToVerify, appVerifier);
-      setVerificationId(confirmationResult);
-      setVerifySuccess("Code sent! Please check your SMS.");
-    } catch (error) {
-      console.error("Error sending code:", error);
-      let msg = "Failed to send code.";
-      if (error.code === 'auth/invalid-phone-number') msg = "Invalid phone number format. Use +[CountryCode][Number]";
-      if (error.code === 'auth/operation-not-allowed') msg = "Phone auth not enabled in Firebase Console.";
-      setVerifyError(msg);
-    }
-  };
-
-  const handleConfirmPhone = async () => {
-    if (!verificationId || !verificationCode) return;
-
-    try {
-      await verificationId.confirm(verificationCode);
-
-      const { updateUserProfile } = await import("../../lib/db");
-      await updateUserProfile(user.uid, {
-        phone: formData.phone,
-        phoneVerified: true
-      });
-
-      setPhoneVerified(true);
-      setIsVerifyingPhone(false);
-      setVerifySuccess("Phone verified successfully!");
-      setModalType("success");
-      setModalMessage("Phone verified successfully!");
-    } catch (error) {
-      console.error("Error confirming code:", error);
-      setVerifyError("Invalid code. Please try again.");
     }
   };
 
@@ -278,7 +214,18 @@ function ProfileContent() {
     );
   }
 
-  if (!user) return null;
+  if (!user) {
+    return (
+      <div className={styles.loading}>
+        <i className="fa-solid fa-user-slash" style={{ fontSize: '48px', color: '#95a5a6', marginBottom: '20px' }}></i>
+        <h2 style={{ color: '#7f8c8d', marginBottom: '10px' }}>User not found</h2>
+        <p style={{ color: '#95a5a6', marginBottom: '20px' }}>The profile you're looking for doesn't exist.</p>
+        <button onClick={() => router.push('/')} className={styles.saveBtn} style={{ maxWidth: '200px' }}>
+          Go to Home
+        </button>
+      </div>
+    );
+  }
 
   const isGoogleAuth = user.providerData?.some(p => p.providerId === 'google.com');
   const memberSince = user.createdAt?.seconds 
@@ -448,18 +395,18 @@ function ProfileContent() {
                   <div className={styles.cardBody}>
                     <p>
                       <i className="fa-regular fa-calendar"></i>
-                      {trip.date?.toDate ? trip.date.toDate().toLocaleDateString() : new Date(trip.date).toLocaleDateString()}
+                      {trip.date?.toDate ? trip.date.toDate().toLocaleDateString() : trip.date ? new Date(trip.date).toLocaleDateString() : 'N/A'}
                     </p>
                     <p>
                       <i className="fa-solid fa-weight-hanging"></i>
-                      {trip.maxWeight || 'N/A'} kg max
+                      Max Weight: {trip.maxWeight || 'N/A'} kg
                     </p>
                   </div>
                   <div className={styles.cardFooter}>
                     <span className={`${styles.status} ${styles['status-' + (trip.status || 'active')]}`}>
                       {trip.status || 'Active'}
                     </span>
-                    <span className={styles.price}>${trip.pricePerKg}/kg</span>
+                    <span className={styles.price}>${trip.pricePerKg || '0'}/kg</span>
                   </div>
                 </div>
               ))
@@ -492,18 +439,24 @@ function ProfileContent() {
                   <div className={styles.cardBody}>
                     <p>
                       <i className="fa-regular fa-calendar"></i>
-                      {order.date?.toDate ? order.date.toDate().toLocaleDateString() : new Date(order.date).toLocaleDateString()}
+                      {order.date?.toDate ? order.date.toDate().toLocaleDateString() : order.date ? new Date(order.date).toLocaleDateString() : 'N/A'}
                     </p>
                     <p>
                       <i className="fa-solid fa-box"></i>
-                      {order.packageSize}
+                      Package: {order.packageSize || 'N/A'}
                     </p>
+                    {order.weight && (
+                      <p>
+                        <i className="fa-solid fa-weight-hanging"></i>
+                        Weight: {order.weight} kg
+                      </p>
+                    )}
                   </div>
                   <div className={styles.cardFooter}>
                     <span className={`${styles.status} ${styles['status-' + (order.status || 'pending')]}`}>
                       {order.status || 'Pending'}
                     </span>
-                    <span className={styles.price}>${order.price}</span>
+                    <span className={styles.price}>${order.price || '0'}</span>
                   </div>
                   {isOwnProfile && (
                     <button
@@ -562,20 +515,12 @@ function ProfileContent() {
                     Phone Number
                     {phoneVerified && <span className={styles.verifiedLabel}><i className="fa-solid fa-circle-check"></i> Verified</span>}
                   </label>
-                  <div className={styles.phoneInputGroup}>
-                    <input
-                      type="tel"
-                      value={formData.phone}
-                      onChange={e => setFormData({ ...formData, phone: e.target.value })}
-                      placeholder="+1234567890"
-                    />
-                    {!phoneVerified && (
-                      <button type="button" onClick={handleVerifyPhone} className={styles.verifyBtn}>
-                        <i className="fa-solid fa-shield-halved"></i>
-                        Verify
-                      </button>
-                    )}
-                  </div>
+                  <input
+                    type="tel"
+                    value={formData.phone}
+                    onChange={e => setFormData({ ...formData, phone: e.target.value })}
+                    placeholder="+1234567890"
+                  />
                 </div>
 
                 <div className={styles.inputGroup}>
@@ -613,8 +558,6 @@ function ProfileContent() {
         )}
       </div>
 
-      <div id="recaptcha-container"></div>
-
       <ConfirmationModal
         isOpen={!!modalMessage}
         onClose={() => setModalMessage(null)}
@@ -623,65 +566,6 @@ function ProfileContent() {
         message={modalMessage}
         isAlert={true}
       />
-
-      {isVerifyingPhone && (
-        <div className={styles.modalOverlay}>
-          <div className={styles.modalContent}>
-            <h3 className={styles.modalTitle}>
-              <i className="fa-solid fa-mobile-screen-button"></i>
-              Verify Phone Number
-            </h3>
-            <p className={styles.modalText}>
-              Enter the 6-digit code sent to <strong>{formData.phone}</strong>
-            </p>
-
-            {verifyError && (
-              <div className={styles.errorBox}>
-                <i className="fa-solid fa-circle-xmark"></i>
-                {verifyError}
-                <button onClick={() => setIsVerifyingPhone(false)} className={styles.closeErrorBtn}>
-                  Close
-                </button>
-              </div>
-            )}
-            {verifySuccess && (
-              <div className={styles.successBox}>
-                <i className="fa-solid fa-circle-check"></i>
-                {verifySuccess}
-              </div>
-            )}
-
-            {!verificationId && !verifyError ? (
-              <div className={styles.loadingSpinner}>
-                <div className={styles.spinner}></div>
-                <p>Sending code...</p>
-              </div>
-            ) : (
-              !verifyError && (
-                <>
-                  <input
-                    type="text"
-                    className={styles.codeInput}
-                    placeholder="000000"
-                    value={verificationCode}
-                    onChange={(e) => setVerificationCode(e.target.value.replace(/\D/g, ''))}
-                    maxLength={6}
-                  />
-                  <div className={styles.modalActions}>
-                    <button className={styles.cancelBtn} onClick={() => setIsVerifyingPhone(false)}>
-                      Cancel
-                    </button>
-                    <button className={styles.confirmBtn} onClick={handleConfirmPhone}>
-                      <i className="fa-solid fa-check"></i>
-                      Verify Code
-                    </button>
-                  </div>
-                </>
-              )
-            )}
-          </div>
-        </div>
-      )}
     </main>
   );
 }
