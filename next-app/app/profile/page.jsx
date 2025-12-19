@@ -39,7 +39,6 @@ function ProfileContent() {
         const { onAuthChange } = await import("../../lib/auth");
         const { getUserProfile, getUserTrips, getUserOrders } = await import("../../lib/db");
 
-        // Get userId from searchParams
         const profileUserId = searchParams.get("userId");
 
         unsubscribeAuth = onAuthChange(async (currentUser) => {
@@ -75,7 +74,7 @@ function ProfileContent() {
             currentUserId: currentUser.uid
           });
 
-          if (!profileUserId || profileUserId === currentUser.uid) {
+          if (isOwnProfile || !profileUserId) {
             setFormData({
               name: userData.name || "",
               email: userData.email || "",
@@ -105,7 +104,7 @@ function ProfileContent() {
     return () => {
       if (unsubscribeAuth) unsubscribeAuth();
     };
-  }, [router, searchParams]);
+  }, [router, searchParams, isOwnProfile]);
 
   const handleUpdateProfile = async (e) => {
     e.preventDefault();
