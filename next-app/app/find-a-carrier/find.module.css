@@ -1,115 +1,245 @@
 /* ---------- PAGE WRAPPER ---------- */
 .pageWrapper {
-  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 20%, #f5f7fa 100%);
-  min-height: 100vh;
-  padding: 40px 20px;
+  background: #f5f7fb;
+  min-height: 60vh;
+  padding-top: 60px;
 }
 
 .loading {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 100px 20px;
-  gap: 20px;
+  text-align: center;
+  padding: 100px;
+  font-size: 20px;
 }
 
-.loading p {
-  color: #718096;
-  font-size: 18px;
-  font-weight: 500;
+/* ---------- SEARCH CARD ---------- */
+.searchCard {
+  background: white;
+  padding: 20px;
+  width: 90%;
+  max-width: 1150px;
+  margin: 0 auto;
+  border-radius: 12px;
+  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.06);
 }
 
-.spinner {
-  width: 50px;
-  height: 50px;
-  border: 4px solid #e2e8f0;
-  border-top-color: #667eea;
-  border-radius: 50%;
-  animation: spin 0.8s linear infinite;
+.searchRow {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 15px;
 }
 
-@keyframes spin {
-  to { transform: rotate(360deg); }
+.inputBox label {
+  font-size: 12px;
+  color: #666;
 }
 
-/* ---------- SEARCH BOX ---------- */
-.searchBoxFind {
-  max-width: 1200px;
-  margin: 0 auto 30px !important;
-  position: static !important;
+.inputBox input,
+.inputBox select {
+  width: 100%;
+  padding: 9px 10px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  margin-top: 4px;
 }
 
-/* ---------- TOP BAR ---------- */
-.topBar {
-  max-width: 1200px;
-  margin: 0 auto 20px;
+.searchBtn {
+  background: #2d5bff;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
 }
 
+.searchBtn:hover {
+  background: #244bcc;
+}
+
+/* ---------- ACTION BUTTONS (Filters / List) ---------- */
 .topActions {
+  width: 90%;
+  max-width: 1150px;
+  margin: 18px auto;
   display: flex;
   justify-content: flex-end;
   gap: 12px;
 }
 
 .filterBtn,
-.viewToggle {
+.listBtn {
   background: white;
-  border: 2px solid #e2e8f0;
-  padding: 10px 18px;
-  border-radius: 12px;
+  border: 1px solid #ddd;
+  padding: 8px 14px;
+  border-radius: 8px;
   cursor: pointer;
-  font-size: 15px;
-  font-weight: 600;
-  color: #4a5568;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  transition: all 0.3s ease;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  font-size: 14px;
 }
 
 .filterBtn:hover,
-.viewToggle:hover {
-  background: #f7fafc;
-  border-color: #667eea;
-  color: #667eea;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
+.listBtn:hover {
+  background: #f2f5ff;
 }
 
-.filterBtn.active {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  border-color: #667eea;
-  color: white;
+/* ---------- PAGE TITLES ---------- */
+.sectionTitle {
+  width: 90%;
+  max-width: 1150px;
+  margin: 20px auto 0;
+  font-size: 22px;
+  font-weight: 600;
 }
 
-.viewToggle {
-  width: 46px;
-  padding: 10px;
-  justify-content: center;
+.resultCount {
+  width: 90%;
+  max-width: 1150px;
+  margin: 2px auto 18px;
+  color: #777;
+  font-size: 14px;
 }
 
-/* ---------- FILTERS PANEL ---------- */
-.filtersPanel {
-  max-width: 1200px;
-  margin: 0 auto 30px;
+/* ---------- GRID ---------- */
+.cardsGrid {
+  width: 90%;
+  max-width: 1150px;
+  margin: 0 auto 60px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 20px;
+}
+
+/* ---------- INDIVIDUAL CARD ---------- */
+.card {
   background: white;
-  padding: 25px 30px;
-  border-radius: 16px;
-  border: 2px solid #e2e8f0;
+  padding: 18px;
+  border-radius: 12px;
+  border: 1px solid #e5e5e5;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
+}
+
+.cardHeader {
+  display: flex;
+  gap: 12px;
+  position: relative;
+}
+
+.avatar {
+  width: 42px;
+  height: 42px;
+  background: #d8e2ff;
+  border-radius: 50%;
+}
+
+.badge {
+  position: absolute;
+  right: 0;
+  top: 0;
+  background: #e9efff;
+  padding: 4px 10px;
+  border-radius: 8px;
+  font-size: 12px;
+}
+
+.cardName {
+  font-size: 16px;
+  margin: 0;
+  font-weight: 600;
+}
+
+.cardSub {
+  font-size: 13px;
+  color: #555;
+}
+
+.cardDate {
+  font-size: 12px;
+  color: #777;
+  margin-top: 2px;
+}
+
+.cardBody {
+  margin-top: 12px;
+  color: #444;
+  font-size: 14px;
+}
+
+.cardBody i {
+  margin-right: 6px;
+  color: #777;
+}
+
+.cardFooter {
+  margin-top: 14px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.price {
+  font-size: 20px;
+  font-weight: 600;
+}
+
+.bookBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 14px;
+  background: #295bff;
+  color: white;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  text-decoration: none;
+  font-size: 14px;
+}
+
+.bookBtn:hover {
+  background: #204acc;
+}
+
+.bookBtnDisabled {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 14px;
+  background: #ccc;
+  color: white;
+  border-radius: 8px;
+  border: none;
+  cursor: not-allowed;
+  text-decoration: none;
+  font-size: 14px;
+  opacity: 0.5;
+}
+
+/* Make the search box behave nicely on this page */
+.searchBoxFind {
+  max-width: 1150px;
+  margin: 0 auto 20px !important;
+  position: static !important;
+  /* in case home version used absolute/relative */
+}
+
+/* Filters Panel */
+.filtersPanel {
+  width: 90%;
+  max-width: 1150px;
+  margin: 0 auto 20px;
+  background: white;
+  padding: 20px;
+  border-radius: 12px;
+  border: 1px solid #e5e5e5;
   display: flex;
   gap: 30px;
   align-items: center;
-  animation: slideDown 0.3s ease-out;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  animation: slideDown 0.2s ease-out;
 }
 
 @keyframes slideDown {
   from {
     opacity: 0;
-    transform: translateY(-15px);
+    transform: translateY(-10px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -119,569 +249,146 @@
 .filterGroup {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
   flex: 1;
-  max-width: 350px;
+  max-width: 300px;
 }
 
 .filterGroup label {
   font-size: 14px;
-  font-weight: 600;
-  color: #2d3748;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.filterGroup label i {
-  color: #667eea;
-}
-
-.filterGroup label strong {
-  color: #667eea;
-  margin-left: auto;
+  font-weight: 500;
+  color: #4a5568;
 }
 
 .rangeInput {
   width: 100%;
   cursor: pointer;
-  height: 6px;
-  border-radius: 10px;
-  background: linear-gradient(to right, #667eea 0%, #764ba2 100%);
-  outline: none;
-  -webkit-appearance: none;
-}
-
-.rangeInput::-webkit-slider-thumb {
-  -webkit-appearance: none;
-  appearance: none;
-  width: 18px;
-  height: 18px;
-  border-radius: 50%;
-  background: white;
-  border: 3px solid #667eea;
-  cursor: pointer;
-  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.4);
-}
-
-.rangeInput::-moz-range-thumb {
-  width: 18px;
-  height: 18px;
-  border-radius: 50%;
-  background: white;
-  border: 3px solid #667eea;
-  cursor: pointer;
-  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.4);
 }
 
 .selectInput {
-  padding: 10px 14px;
-  border: 2px solid #e2e8f0;
-  border-radius: 10px;
+  padding: 8px 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
   font-size: 14px;
   color: #2d3748;
-  font-weight: 500;
-  transition: all 0.3s ease;
 }
 
-.selectInput:focus {
-  outline: none;
-  border-color: #667eea;
-  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+.active {
+  background: #e6f0ff;
+  border-color: #2d5bff;
+  color: #2d5bff;
 }
 
 .clearFiltersBtn {
-  background: white;
-  border: 2px solid #e2e8f0;
+  background: none;
+  border: 1px solid #ddd;
   border-radius: 50%;
-  width: 44px;
-  height: 44px;
+  width: 36px;
+  height: 36px;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #718096;
-  font-size: 16px;
-  transition: all 0.3s ease;
+  color: #666;
 }
 
-.clearFiltersBtn:hover {
-  background: #fff5f5;
-  border-color: #fc8181;
-  color: #e53e3e;
-  transform: rotate(180deg);
-}
-
-/* ---------- RESULTS HEADER ---------- */
-.resultsHeader {
-  max-width: 1200px;
-  margin: 0 auto 25px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.sectionTitle {
-  font-size: 28px;
-  font-weight: 700;
-  color: #2d3748;
-  margin: 0;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.sectionTitle i {
-  color: #667eea;
-}
-
-.resultCount {
-  color: #718096;
-  font-size: 15px;
-  margin: 0;
-}
-
-.resultCount strong {
-  color: #2d3748;
-  font-weight: 700;
-}
-
-/* ---------- CARDS GRID ---------- */
-.cardsGrid {
-  max-width: 1200px;
+/* List View Overrides */
+.cardsList {
+  width: 90%;
+  max-width: 1150px;
   margin: 0 auto 60px;
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
-  gap: 24px;
-}
-
-/* ---------- INDIVIDUAL CARD ---------- */
-.card {
-  background: white;
-  border-radius: 20px;
-  border: 2px solid #e2e8f0;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
-  overflow: hidden;
-  transition: all 0.3s ease;
   display: flex;
   flex-direction: column;
-}
-
-.card:hover {
-  transform: translateY(-8px);
-  box-shadow: 0 12px 40px rgba(102, 126, 234, 0.15);
-  border-color: #667eea;
-}
-
-.myTripCard {
-  border-color: #cbd5e0;
-  opacity: 0.85;
-}
-
-.myTripCard:hover {
-  transform: translateY(-4px);
-  border-color: #a0aec0;
-}
-
-.cardHeader {
-  padding: 20px;
-  display: flex;
-  align-items: center;
   gap: 15px;
-  border-bottom: 2px solid #f7fafc;
-  position: relative;
 }
 
-.avatarWrapper {
-  position: relative;
-  transition: all 0.3s ease;
-}
-
-.avatarWrapper:hover .viewProfileHint {
-  opacity: 1;
-  transform: translateY(0);
-}
-
-.avatar {
-  width: 56px;
-  height: 56px;
-  border-radius: 50%;
+.cardList {
   display: flex;
   align-items: center;
-  justify-content: center;
-  font-size: 24px;
-  font-weight: 700;
-  color: white;
-  border: 3px solid white;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  justify-content: space-between;
+  padding: 15px 25px;
 }
 
-.viewProfileHint {
-  position: absolute;
-  bottom: -30px;
-  left: 50%;
-  transform: translateX(-50%) translateY(5px);
-  background: #2d3748;
-  color: white;
-  padding: 6px 12px;
-  border-radius: 8px;
-  font-size: 11px;
-  white-space: nowrap;
-  opacity: 0;
-  transition: all 0.3s ease;
-  pointer-events: none;
-  display: flex;
+.cardList .cardHeader {
+  flex: 2;
   align-items: center;
-  gap: 5px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
 
-.viewProfileHint::before {
-  content: '';
-  position: absolute;
-  top: -4px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 0;
-  height: 0;
-  border-left: 5px solid transparent;
-  border-right: 5px solid transparent;
-  border-bottom: 5px solid #2d3748;
+.cardList .headerInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
 
-.headerInfo {
-  flex: 1;
-  min-width: 0;
-}
-
-.cardName {
-  font-size: 18px;
-  font-weight: 700;
-  color: #2d3748;
-  margin: 0 0 8px 0;
+.cardList .routeInfo {
   display: flex;
   align-items: center;
   gap: 10px;
 }
 
-.youBadge {
-  font-size: 11px;
-  font-weight: 600;
-  color: #718096;
-  background: #edf2f7;
-  padding: 4px 10px;
-  border-radius: 12px;
-}
-
-.routeInfo {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.route {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.routeText {
-  font-weight: 600;
-  color: #4a5568;
-  font-size: 14px;
-}
-
-.transportBadge {
-  position: absolute;
-  top: 20px;
-  right: 20px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  padding: 8px 16px;
-  border-radius: 12px;
-  font-size: 13px;
-  font-weight: 600;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
-}
-
-.cardBody {
-  padding: 20px;
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-.infoGrid {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
-}
-
-.infoItem {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 14px;
-  background: #f7fafc;
-  border-radius: 10px;
-  font-size: 14px;
+.cardList .routeText {
   font-weight: 500;
-  color: #4a5568;
-}
-
-.infoItem i {
-  color: #667eea;
-  font-size: 15px;
-}
-
-.description {
-  margin: 0;
-  padding: 12px;
-  background: #f7fafc;
-  border-radius: 10px;
-  color: #4a5568;
-  font-size: 14px;
-  line-height: 1.6;
-  font-style: italic;
-  position: relative;
-  padding-left: 40px;
-}
-
-.description i {
-  position: absolute;
-  left: 14px;
-  top: 14px;
-  color: #cbd5e0;
-  font-size: 16px;
-}
-
-.cardFooter {
-  padding: 20px;
-  border-top: 2px solid #f7fafc;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  background: #fafbfc;
-}
-
-.priceSection {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.priceLabel {
-  font-size: 12px;
-  color: #718096;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.price {
-  font-size: 28px;
-  font-weight: 700;
-  color: #667eea;
-  margin: 0;
-}
-
-.bookBtn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  padding: 14px 28px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  border-radius: 12px;
-  border: none;
-  cursor: pointer;
-  text-decoration: none;
-  font-size: 15px;
-  font-weight: 600;
-  transition: all 0.3s ease;
-  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
-}
-
-.bookBtn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
-}
-
-.bookBtnDisabled {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  padding: 14px 28px;
-  background: #e2e8f0;
-  color: #a0aec0;
-  border-radius: 12px;
-  border: none;
-  cursor: not-allowed;
-  text-decoration: none;
-  font-size: 15px;
-  font-weight: 600;
-}
-
-/* ---------- EMPTY STATE ---------- */
-.emptyState {
-  max-width: 600px;
-  margin: 60px auto;
-  text-align: center;
-  padding: 60px 40px;
-  background: white;
-  border-radius: 24px;
-  border: 2px solid #e2e8f0;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
-}
-
-.emptyIcon {
-  font-size: 64px;
-  margin-bottom: 24px;
-  color: #cbd5e0;
-}
-
-.emptyTitle {
-  font-size: 24px;
-  font-weight: 700;
   color: #2d3748;
-  margin: 0 0 12px 0;
-}
-
-.emptyText {
-  color: #718096;
-  font-size: 16px;
-  line-height: 1.6;
-  margin: 0 0 28px 0;
-}
-
-.clearBtn {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  padding: 12px 24px;
-  border-radius: 12px;
-  border: none;
-  cursor: pointer;
-  font-size: 15px;
-  font-weight: 600;
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  transition: all 0.3s ease;
-  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
-}
-
-.clearBtn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
-}
-
-/* ---------- LIST VIEW ---------- */
-.cardsList {
-  max-width: 1200px;
-  margin: 0 auto 60px;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-.cardList {
-  flex-direction: row;
-  align-items: center;
-  padding: 20px 25px;
-}
-
-.cardList .cardHeader {
-  flex: 2;
-  border: none;
-  padding: 0;
 }
 
 .cardList .cardBody {
-  flex: 1.5;
-  padding: 0 20px;
-  border-left: 2px solid #f7fafc;
-  border-right: 2px solid #f7fafc;
-}
-
-.cardList .infoGrid {
-  flex-wrap: nowrap;
+  flex: 1;
+  margin: 0;
+  display: flex;
+  align-items: center;
 }
 
 .cardList .description {
   display: none;
+  /* Hide description in list view for compactness */
 }
 
 .cardList .cardFooter {
   flex: 1;
-  border: none;
-  background: transparent;
-  padding: 0;
+  margin: 0;
+  justify-content: flex-end;
+  gap: 20px;
 }
 
-.cardList .transportBadge {
+.cardList .badge {
   position: static;
   margin-left: 15px;
 }
 
-/* ---------- RESPONSIVE ---------- */
-@media (max-width: 1024px) {
-  .cardsGrid {
-    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-  }
+.youBadge {
+  font-size: 12px;
+  color: #667eea;
+  margin-left: 8px;
 }
 
-@media (max-width: 768px) {
-  .pageWrapper {
-    padding: 20px 12px;
-  }
+.emptyState {
+  text-align: center;
+  padding: 80px 20px;
+  background: white;
+  border-radius: 20px;
+  margin: 20px auto;
+  max-width: 800px;
+}
 
-  .cardsGrid {
-    grid-template-columns: 1fr;
-  }
+.emptyIcon {
+  font-size: 48px;
+  margin-bottom: 20px;
+}
 
-  .resultsHeader {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 8px;
-  }
+.emptyTitle {
+  margin-bottom: 10px;
+}
 
-  .filtersPanel {
-    flex-direction: column;
-    align-items: stretch;
-  }
+.emptyText {
+  color: #666;
+  margin-bottom: 20px;
+}
 
-  .filterGroup {
-    max-width: 100%;
-  }
-
-  .cardList {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .cardList .cardHeader {
-    border-bottom: 2px solid #f7fafc;
-    padding-bottom: 15px;
-  }
-
-  .cardList .cardBody {
-    border: none;
-    padding: 15px 0;
-    border-bottom: 2px solid #f7fafc;
-  }
-
-  .cardList .cardFooter {
-    padding-top: 15px;
-  }
-
-  .transportBadge {
-    position: static !important;
-    margin-top: 12px;
-  }
+.clearBtn {
+  background: #edf2f7;
+  color: #4a5568;
+  padding: 8px 16px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
 }
