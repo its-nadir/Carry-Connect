@@ -11,66 +11,46 @@
   padding: 0 25px;
 
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-start;
   align-items: flex-start;
-  gap: 60px;
 }
 
 .brand {
-  flex: 1.4;
+  flex: 1;
 }
 
 .logoRow {
   display: flex;
   align-items: center;
   gap: 8px;
+  text-decoration: none;
+  cursor: pointer;
+  width: fit-content;
+  transition: opacity 0.2s ease;
 }
 
-.logoRow i {
-  color: #2d6ef2;
-  font-size: 1.8rem;
+.logoRow:hover {
+  opacity: 0.8;
+}
+
+.logoRow img {
+  width: 24px;
+  height: 24px;
+}
+
+.logoRow h3 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+  color: #1a1a1a;
 }
 
 .brandText {
-  margin: 12px 0 18px;
+  margin: 12px 0 0;
   color: #555;
   line-height: 1.5;
-  max-width: 250px;
-}
-
-.socials {
-  display: flex;
-  gap: 14px;
-  font-size: 18px;
-  color: #777;
-}
-
-.columns {
-  flex: 2;
-  display: flex;
-  justify-content: space-between;
-}
-
-.columns div {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.columns h4 {
-  font-size: 16px;
-  margin-bottom: 10px;
-  font-weight: 600;
-}
-
-.columns a {
-  color: #555;
-  text-decoration: none;
+  max-width: 300px;
   font-size: 14px;
-}
-
-.columns a:hover {
-  color: #2d6ef2;
 }
 
 .bottom {
@@ -89,9 +69,7 @@
     align-items: flex-start;
   }
 
-  .columns {
-    width: 100%;
-    justify-content: space-between;
-    margin-top: 20px;
+  .brandText {
+    max-width: 100%;
   }
 }
