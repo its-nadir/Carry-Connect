@@ -93,12 +93,21 @@ function MessagesContent() {
                 [chat.tripId]: lastMsg
               }));
 
-              // Calculate unread count
+              // Calculate unread count only if not currently viewing this chat
               if (lastMsg.senderUid !== user.uid && !lastMsg.seenBy?.includes(user.uid)) {
-                setUnreadCounts(prev => ({
-                  ...prev,
-                  [chat.tripId]: (prev[chat.tripId] || 0) + 1
-                }));
+                setUnreadCounts(prev => {
+                  // Don't show unread if we're currently in this chat
+                  if (selectedTripId === chat.tripId) {
+                    return { ...prev, [chat.tripId]: 0 };
+                  }
+                  return {
+                    ...prev,
+                    [chat.tripId]: 1
+                  };
+                });
+              } else if (lastMsg.seenBy?.includes(user.uid)) {
+                // Clear unread if message is seen
+                setUnreadCounts(prev => ({ ...prev, [chat.tripId]: 0 }));
               }
             }
           }
@@ -116,11 +125,15 @@ function MessagesContent() {
     if (!selectedTripId || !user) return;
 
     setCurrentTripId(selectedTripId);
+    
+    // Clear unread count immediately when opening chat
     setUnreadCounts(prev => ({ ...prev, [selectedTripId]: 0 }));
 
     const unsub = listenToTripChat(msgs => {
       setMessages(msgs);
+      // Mark messages as seen and clear unread count
       markTripMessagesSeen(selectedTripId);
+      setUnreadCounts(prev => ({ ...prev, [selectedTripId]: 0 }));
       scrollToBottom();
     });
 
@@ -160,12 +173,10 @@ function MessagesContent() {
     if (!msg || msg.senderUid !== user.uid) return null;
     
     const otherUid = currentChat?.otherUid;
-    if (!otherUid) return "✓";
+    if (!otherUid) return "sent";
     
     if (msg.seenBy?.includes(otherUid)) {
       return "read";
-    } else if (msg.deliveredTo?.includes(otherUid)) {
-      return "delivered";
     } else {
       return "sent";
     }
@@ -192,7 +203,7 @@ function MessagesContent() {
             {sortedConversations.map(chat => {
               const lastMsg = lastMessages[chat.tripId];
               const unreadCount = unreadCounts[chat.tripId] || 0;
-              const isUnread = lastMsg && lastMsg.senderUid !== user.uid && !lastMsg.seenBy?.includes(user.uid);
+              const isUnread = unreadCount > 0;
               const isSelected = chat.tripId === selectedTripId;
               
               return (
@@ -265,18 +276,12 @@ function MessagesContent() {
                           {mine && status && (
                             <span className={styles.checkmarks}>
                               {status === "read" ? (
-                                <svg className={styles.checkRead} viewBox="0 0 16 11" width="16" height="11">
-                                  <path d="M11.071.653a.75.75 0 0 1 1.058.046l3.5 3.75a.75.75 0 0 1-1.104 1.014L11.5 2.25 8.682 5.068a.75.75 0 0 1-1.06-1.06l3.448-3.355zM5.071.653a.75.75 0 0 1 1.058.046l3.5 3.75a.75.75 0 0 1-1.104 1.014L5.5 2.25.525 7.013a.75.75 0 0 1-1.05-1.076l5.596-5.284z" fill="currentColor"/>
-                                  <path d="M7.429 7.568a.75.75 0 0 1 1.06 0l2.5 2.5a.75.75 0 1 1-1.06 1.06L8 9.197l-4.929 4.93a.75.75 0 0 1-1.06-1.061l5.45-5.45.968-.048z" fill="currentColor"/>
-                                </svg>
-                              ) : status === "delivered" ? (
-                                <svg className={styles.checkDelivered} viewBox="0 0 16 11" width="16" height="11">
-                                  <path d="M11.071.653a.75.75 0 0 1 1.058.046l3.5 3.75a.75.75 0 0 1-1.104 1.014L11.5 2.25 8.682 5.068a.75.75 0 0 1-1.06-1.06l3.448-3.355zM5.071.653a.75.75 0 0 1 1.058.046l3.5 3.75a.75.75 0 0 1-1.104 1.014L5.5 2.25.525 7.013a.75.75 0 0 1-1.05-1.076l5.596-5.284z" fill="currentColor"/>
-                                  <path d="M7.429 7.568a.75.75 0 0 1 1.06 0l2.5 2.5a.75.75 0 1 1-1.06 1.06L8 9.197l-4.929 4.93a.75.75 0 0 1-1.06-1.061l5.45-5.45.968-.048z" fill="currentColor"/>
+                                <svg className={styles.checkRead} viewBox="0 0 18 18" width="18" height="18">
+                                  <path d="M17.394 5.035l-.57-.444a.434.434 0 0 0-.609.076l-6.39 8.198a.38.38 0 0 1-.577.039l-.427-.388a.381.381 0 0 0-.578.038l-.451.576a.497.497 0 0 0 .043.645l1.575 1.51a.38.38 0 0 0 .577-.039l7.483-9.602a.436.436 0 0 0-.076-.609zm-4.892 0l-.57-.444a.434.434 0 0 0-.609.076l-6.39 8.198a.38.38 0 0 1-.577.039l-2.614-2.556a.435.435 0 0 0-.614.007l-.505.516a.435.435 0 0 0 .007.614l3.887 3.8a.38.38 0 0 0 .577-.039l7.483-9.602a.435.435 0 0 0-.075-.609z" fill="currentColor"/>
                                 </svg>
                               ) : (
-                                <svg className={styles.checkSent} viewBox="0 0 12 11" width="12" height="11">
-                                  <path d="M11.071.653a.75.75 0 0 1 0 1.06l-7.5 7.5a.75.75 0 0 1-1.06 0l-2.5-2.5a.75.75 0 1 1 1.06-1.06l1.97 1.97 6.97-6.97a.75.75 0 0 1 1.06 0z" fill="currentColor"/>
+                                <svg className={styles.checkSent} viewBox="0 0 12 11" width="16" height="16">
+                                  <path d="M11.1 2.3L9.5.7c-.2-.2-.5-.2-.7 0L4.5 5.2l-.9-.9c-.2-.2-.5-.2-.7 0L1.4 5.8c-.2.2-.2.5 0 .7l2.5 2.5c.2.2.5.2.7 0L11.1 3c.2-.2.2-.5 0-.7z" fill="currentColor"/>
                                 </svg>
                               )}
                             </span>
