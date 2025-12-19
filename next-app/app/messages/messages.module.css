@@ -71,7 +71,6 @@
   height: 52px;
   min-width: 52px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
   display: flex;
   align-items: center;
@@ -164,10 +163,37 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 16px 20px;
+  padding: 12px 16px;
   border-bottom: 1px solid #e4e6eb;
   background: #fff;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.headerUserInfo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  transition: background 0.2s ease;
+  padding: 4px 8px;
+  margin: -4px -8px;
+  border-radius: 8px;
+}
+
+.headerUserInfo:hover {
+  background: #f0f2f5;
+}
+
+.headerAvatar {
+  width: 42px;
+  height: 42px;
+  min-width: 42px;
+  border-radius: 50%;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  font-weight: 600;
 }
 
 .headerInfo {
@@ -217,7 +243,6 @@
   height: 28px;
   min-width: 28px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
   display: flex;
   align-items: center;
@@ -273,19 +298,16 @@
 .checkmarks {
   display: inline-flex;
   align-items: center;
-  margin-left: 2px;
+  margin-left: 3px;
+  height: 16px;
 }
 
 .checkSent {
-  color: rgba(255, 255, 255, 0.7);
-}
-
-.checkDelivered {
-  color: rgba(255, 255, 255, 0.7);
+  color: rgba(255, 255, 255, 0.6);
 }
 
 .checkRead {
-  color: #4fc3f7;
+  color: #53bdeb;
 }
 
 .bubbleGray .checkRead {
